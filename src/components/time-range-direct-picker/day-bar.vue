@@ -40,10 +40,24 @@ import TimeRuler from './time-ruler.vue'
 
 const props = defineProps<{
     date: Date
-    timeRange: Date[] | undefined
+    timeRange: (Date | undefined)[] | undefined
+    activated: boolean
 }>()
 
-const emit = defineEmits(['point', 'start', 'end'])
+const emit = defineEmits([
+    /**
+     * picking 事件会在两种情况下触发：
+     *
+     * 1. 若 activated 为 false，则仅当用户在 DayBar 上按下鼠标时触发该事件；
+     * 2. 若为 true，则还会在用户移动鼠标时触发该事件。
+     *
+     * 当 picking 事件触发时，事件参数为鼠标触发点所对应的时刻（单位：分钟）。
+     */
+    'picking',
+
+    /** 当用户在 DayBar 上松开鼠标时，将会触发 picked 事件，其参数与 picking 事件相同。 */
+    'picked',
+])
 
 const title = $computed(() => format(props.date, 'yyyy-MM-dd'))
 
