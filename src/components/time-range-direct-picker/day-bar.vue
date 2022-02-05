@@ -42,7 +42,7 @@ import TimeRuler from './time-ruler.vue'
 const props = defineProps<{
     date: Date
     timeRange: TimeRange
-    activated: boolean
+    activated?: boolean
 }>()
 
 const emit = defineEmits([
