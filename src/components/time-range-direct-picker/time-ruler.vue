@@ -1,4 +1,5 @@
 <template>
+    <!-- WAIT: 改为使用 SVG -->
     <div class="r-time-range-direct-picker__time-ruler">
         <div class="r-time-range-direct-picker__time-ruler__scale"></div>
         <div class="r-time-range-direct-picker__time-ruler__scale"></div>
