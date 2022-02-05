@@ -36,11 +36,12 @@
 /// <reference types="vue/macros-global" />
 
 import { format, startOfDay, endOfDay } from 'date-fns'
+import { TimeRange, getStartTime, getEndTime } from './util'
 import TimeRuler from './time-ruler.vue'
 
 const props = defineProps<{
     date: Date
-    timeRange: (Date | undefined)[] | undefined
+    timeRange: TimeRange
     activated: boolean
 }>()
 
@@ -64,11 +65,14 @@ const title = $computed(() => format(props.date, 'yyyy-MM-dd'))
 const startTimeOfDate = $computed(() => startOfDay(props.date))
 const endTimeOfDate = $computed(() => endOfDay(props.date))
 
-const startTime = $computed(() => props.timeRange?.[0])
-const endTime = $computed(() => props.timeRange?.[1])
+const startTime = $computed(() => getStartTime(props.timeRange))
+const endTime = $computed(() => getEndTime(props.timeRange))
 
+// 选中区域的起点和终点（若起点或终点不在当前 DayBar 所表示的一天的时间范围中，则为 undefined）
 const startPoint = $computed(() => (isIn(startTime) ? timeToPosition(startTime) : undefined))
 const endPoint = $computed(() => (isIn(endTime) ? timeToPosition(endTime) : undefined))
+
+// 高亮区域（选中区域与当前 DayBar 所表示的一天的时间范围的交集）
 const rail = $computed(() => {
     const start = startPoint !== undefined ? startPoint : isEarlier(startTime) ? 0 : undefined
     const end = endPoint !== undefined ? endPoint : isLater(endTime) ? 1 : undefined
