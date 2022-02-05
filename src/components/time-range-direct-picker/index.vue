@@ -6,7 +6,7 @@
     </div>
 </template>
 <script lang="ts">
-export default { name: 'DateRangeDirectPicker' }
+export default { name: 'TimeRangeDirectPicker' }
 </script>
 <script lang="ts" setup>
 import DayBar from './day-bar.vue'

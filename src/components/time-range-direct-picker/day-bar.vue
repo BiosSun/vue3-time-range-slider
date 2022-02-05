@@ -1,6 +1,6 @@
 <template>
-    <div class="r-date-range-direct-picker__day-bar">
-        <div class="r-date-range-direct-picker__day-bar__title">
+    <div class="r-time-range-direct-picker__day-bar">
+        <div class="r-time-range-direct-picker__day-bar__title">
             {{ title }}
         </div>
 
@@ -8,7 +8,7 @@
 
         <div
             v-if="rail !== undefined"
-            class="r-date-range-direct-picker__day-bar__rail"
+            class="r-time-range-direct-picker__day-bar__rail"
             :style="{
                 '--start': rail[0],
                 '--end': rail[1],
@@ -17,7 +17,7 @@
 
         <div
             v-if="startPoint !== undefined"
-            class="r-date-range-direct-picker__day-bar__point"
+            class="r-time-range-direct-picker__day-bar__point"
             :style="{
                 '--position': startPoint,
             }"
@@ -25,7 +25,7 @@
 
         <div
             v-if="endPoint !== undefined"
-            class="r-date-range-direct-picker__day-bar__point"
+            class="r-time-range-direct-picker__day-bar__point"
             :style="{
                 '--position': endPoint,
             }"
@@ -85,15 +85,15 @@ function timeToPosition(time: Date | undefined): number | undefined {
 }
 </script>
 <style lang="scss">
-.r-date-range-direct-picker__day-bar {
+.r-time-range-direct-picker__day-bar {
     position: relative;
-    height: var(--r-date-range-direct-picker__day-bar--height, 34px);
+    height: var(--r-time-range-direct-picker__day-bar--height, 34px);
 
-    + .r-date-range-direct-picker__day-bar {
+    + .r-time-range-direct-picker__day-bar {
         border-top: 1px solid #000;
     }
 
-    .r-date-range-direct-picker__time-ruler {
+    .r-time-range-direct-picker__time-ruler {
         position: absolute;
         left: 0;
         right: 0;
@@ -101,7 +101,7 @@ function timeToPosition(time: Date | undefined): number | undefined {
     }
 }
 
-.r-date-range-direct-picker__day-bar__title {
+.r-time-range-direct-picker__day-bar__title {
     position: absolute;
     left: 5px;
     top: 0px;
@@ -110,7 +110,7 @@ function timeToPosition(time: Date | undefined): number | undefined {
     user-select: none;
 }
 
-.r-date-range-direct-picker__day-bar__track {
+.r-time-range-direct-picker__day-bar__track {
     position: absolute;
     left: 1px;
     right: 1px;
@@ -118,7 +118,7 @@ function timeToPosition(time: Date | undefined): number | undefined {
     bottom: 0;
 }
 
-.r-date-range-direct-picker__day-bar__rail {
+.r-time-range-direct-picker__day-bar__rail {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -127,7 +127,7 @@ function timeToPosition(time: Date | undefined): number | undefined {
     background: #00aaff30;
 }
 
-.r-date-range-direct-picker__day-bar__point {
+.r-time-range-direct-picker__day-bar__point {
     position: absolute;
     top: 0;
     bottom: 0;
