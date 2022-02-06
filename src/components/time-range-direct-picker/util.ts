@@ -29,3 +29,7 @@ export function getEndTime(timeRange: TimeRange): Date | undefined {
 
     return endOfMinute(time)
 }
+
+export function clamp(val: number, min: number, max: number): number {
+    return Math.min(Math.max(min, val), max)
+}

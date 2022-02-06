@@ -20,7 +20,7 @@ function onPicked(time: Date) {
 <template>
     <h1>DayBar</h1>
 
-    <label><input type="checkbox" v-model="activated" /> Activated</label>
+    <label><input type="checkbox" v-model="activated" /> Activated: {{ activated }}</label>
 
     <h2>undefined</h2>
     <DayBar

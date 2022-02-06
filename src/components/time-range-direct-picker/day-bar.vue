@@ -1,5 +1,11 @@
 <template>
-    <div class="r-time-range-direct-picker__day-bar">
+    <div
+        ref="rootEl"
+        class="r-time-range-direct-picker__day-bar"
+        @mousedown="onMouseDown"
+        @mouseup="onMouseUp"
+        @mousemove="onMouseMove"
+    >
         <div class="r-time-range-direct-picker__day-bar__title">
             {{ title }}
         </div>
@@ -36,8 +42,12 @@
 /// <reference types="vue/macros-global" />
 
 import { format, startOfDay, endOfDay } from 'date-fns'
-import { TimeRange, getStartTime, getEndTime } from './util'
+import { TimeRange, getStartTime, getEndTime, clamp } from './util'
 import TimeRuler from './time-ruler.vue'
+
+const MILLISECONDS_OF_MINUTE = 1000 * 60
+const MINUTES_OF_DAY = 60 * 24
+const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
 
 const props = defineProps<{
     date: Date
@@ -60,10 +70,12 @@ const emit = defineEmits([
     'picked',
 ])
 
+const rootEl = $ref<HTMLDivElement | null>(null)
+
 const title = $computed(() => format(props.date, 'yyyy-MM-dd'))
 
-const startTimeOfDate = $computed(() => startOfDay(props.date))
-const endTimeOfDate = $computed(() => endOfDay(props.date))
+const startTimeOfDay = $computed(() => startOfDay(props.date))
+const endTimeOfDay = $computed(() => endOfDay(props.date))
 
 const startTime = $computed(() => getStartTime(props.timeRange))
 const endTime = $computed(() => getEndTime(props.timeRange))
@@ -79,17 +91,35 @@ const rail = $computed(() => {
     return start !== undefined && end !== undefined ? [start, end] : undefined
 })
 
+function onMouseDown(event: MouseEvent) {
+    emit('picking', getMouseTime(event))
+}
+
+function onMouseUp(event: MouseEvent) {
+    emit('picked', getMouseTime(event))
+}
+
+function onMouseMove(event: MouseEvent) {
+    if (props.activated) {
+        emit('picking', getMouseTime(event))
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 function isIn(time: Date | undefined): boolean {
-    return !!(time && time >= startTimeOfDate && time <= endTimeOfDate)
+    return !!(time && time >= startTimeOfDay && time <= endTimeOfDay)
 }
 
 function isEarlier(time: Date | undefined): boolean {
-    return !!(time && time < startTimeOfDate)
+    return !!(time && time < startTimeOfDay)
 }
 
 function isLater(time: Date | undefined): boolean {
-    return !!(time && time > endTimeOfDate)
+    return !!(time && time > endTimeOfDay)
 }
+
+// NOTE: 这里的 position 指的是相对于 DayBar 内容区域左侧的水平位置（ [0 ~ 1] ）
 
 function timeToPosition(time: Date | undefined): number | undefined {
     if (time === undefined) {
@@ -97,9 +127,38 @@ function timeToPosition(time: Date | undefined): number | undefined {
     }
 
     return (
-        (time.valueOf() - startTimeOfDate.valueOf()) /
-        (endTimeOfDate.valueOf() - startTimeOfDate.valueOf())
+        (time.valueOf() - startTimeOfDay.valueOf()) /
+        (endTimeOfDay.valueOf() - startTimeOfDay.valueOf())
     )
+}
+
+function positionToTime(position: number | undefined): Date | undefined {
+    if (position === undefined) {
+        return undefined
+    }
+
+    return new Date(
+        Math.min(
+            startTimeOfDay.valueOf() + Math.round(position * MILLISECONDS_OF_DAY),
+            endTimeOfDay.valueOf(),
+        ),
+    )
+}
+
+function getMousePosition(event: MouseEvent): number | undefined {
+    if (!rootEl) {
+        return undefined
+    }
+
+    const rect = rootEl.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const position = x / (rect.width - 1)
+
+    return clamp(position, 0, 1)
+}
+
+function getMouseTime(event: MouseEvent): Date | undefined {
+    return positionToTime(getMousePosition(event))
 }
 </script>
 <style lang="scss">
