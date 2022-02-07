@@ -66,6 +66,7 @@ function onPicked(time: Date) {
 
     <h1>TimeRangeDirectPicker</h1>
     <TimeRangeDirectPicker v-model="timeRange" />
+    {{ timeRange }}
 </template>
 
 <style>

@@ -19,10 +19,10 @@ import DayBar from './day-bar.vue'
 import { TimeRange } from './util'
 
 const props = defineProps<{
-    modelValue?: Date[]
+    modelValue?: TimeRange
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'change'])
 
 const dates = [
     new Date(2022, 0, 1),
@@ -41,8 +41,8 @@ const dates = [
 type State = 'wait' | 'picking_start' | 'picked_start' | 'picking_end'
 type Action = 'picking' | 'picked'
 
-let state = $ref<State>('wait')
-let selectingTimeRange = $ref<TimeRange>(undefined)
+let state: State = $ref('wait')
+let selectingTimeRange: TimeRange = $ref(undefined)
 
 const activatedDayBar = $computed(
     () => state === 'picking_start' || state === 'picked_start' || state === 'picking_end',
@@ -116,6 +116,8 @@ const STATE_ACTION_HANDLERS: {
             if (time) {
                 selectingTimeRange = [selectingTimeRange![0], time]
             }
+            onModelValueChange(selectingTimeRange)
+            selectingTimeRange = undefined
             return 'wait'
         },
     },
@@ -127,6 +129,11 @@ function onPicking(time: Date | undefined) {
 
 function onPicked(time: Date | undefined) {
     dispatch('picked', time)
+}
+
+function onModelValueChange(timeRange: TimeRange) {
+    emit('update:modelValue', timeRange)
+    emit('change', timeRange)
 }
 
 function dispatch(action: Action, time: Date | undefined) {
