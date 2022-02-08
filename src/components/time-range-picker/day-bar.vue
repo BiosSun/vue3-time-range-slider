@@ -42,7 +42,7 @@
 /// <reference types="vue/macros-global" />
 
 import { format, startOfDay, endOfDay } from 'date-fns'
-import { TimeRange, getStartTime, getEndTime, clamp } from './util'
+import { TimeRange, PickingTimeRange, getStartTime, getEndTime, clamp } from './util'
 import TimeRuler from './time-ruler.vue'
 
 const MILLISECONDS_OF_MINUTE = 1000 * 60
@@ -51,7 +51,7 @@ const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
 
 const props = defineProps<{
     date: Date
-    timeRange: TimeRange
+    timeRange?: TimeRange | PickingTimeRange
     activated?: boolean
 }>()
 
@@ -165,10 +165,7 @@ function getMouseTime(event: MouseEvent): Date | undefined {
 .r-time-range-direct-picker__day-bar {
     position: relative;
     height: var(--r-time-range-direct-picker__day-bar--height, 34px);
-
-    + .r-time-range-direct-picker__day-bar {
-        border-top: 1px solid #000;
-    }
+    border-bottom: 1px solid #000;
 
     .r-time-range-direct-picker__time-ruler {
         position: absolute;

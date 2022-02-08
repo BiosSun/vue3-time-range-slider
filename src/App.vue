@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import TimeRangeDirectPicker from './components/time-range-direct-picker/index.vue'
-import DayBar from './components/time-range-direct-picker/day-bar.vue'
+import TimeRangePicker from './components/time-range-picker'
 
+const pickerRange = [new Date(2022, 0, 1), new Date(2022, 0, 60)]
 const timeRange = $ref([new Date(2022, 0, 5, 23, 30), new Date(2022, 0, 2, 0, 30)])
 // const timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
 // const timeRange = $ref([new Date(2022, 0, 2, 0, 30), new Date(2022, 0, 2, 23, 30)])
@@ -18,12 +18,20 @@ function onPicked(time: Date) {
 </script>
 
 <template>
-    <h1>DayBar</h1>
+    <h1>TimeRangePicker</h1>
+
+    {{ timeRange }}
+
+    <TimeRangePicker v-model="timeRange" :pickerRange="pickerRange" />
+
+    <hr />
+
+    <h1>TimeRangePicker.DayBar</h1>
 
     <label><input type="checkbox" v-model="activated" /> Activated: {{ activated }}</label>
 
     <h2>undefined</h2>
-    <DayBar
+    <TimeRangePicker.DayBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="undefined"
@@ -33,7 +41,7 @@ function onPicked(time: Date) {
     />
 
     <h2>[undefined, undefined]</h2>
-    <DayBar
+    <TimeRangePicker.DayBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, undefined]"
@@ -43,7 +51,7 @@ function onPicked(time: Date) {
     />
 
     <h2>[2022-01-05 12:00, undefined]</h2>
-    <DayBar
+    <TimeRangePicker.DayBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), undefined]"
@@ -53,7 +61,7 @@ function onPicked(time: Date) {
     />
 
     <h2>[2022-01-05 12:00, 2022-01-05 23:59]</h2>
-    <DayBar
+    <TimeRangePicker.DayBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
@@ -61,12 +69,6 @@ function onPicked(time: Date) {
         @picked="onPicked"
         style="border: 1px solid #000"
     />
-
-    <hr />
-
-    <h1>TimeRangeDirectPicker</h1>
-    <TimeRangeDirectPicker v-model="timeRange" />
-    {{ timeRange }}
 </template>
 
 <style>

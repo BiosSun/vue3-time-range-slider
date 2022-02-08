@@ -15,47 +15,39 @@
 export default { name: 'TimeRangeDirectPicker' }
 </script>
 <script lang="ts" setup>
+import { eachDayOfInterval } from 'date-fns'
 import DayBar from './day-bar.vue'
-import { TimeRange } from './util'
+import assert, {
+    isTimeRange,
+    PickingTimeRange,
+    TimeRange,
+    timeRangeToInterval,
+    normalizeTimeRange,
+} from './util'
 
 const props = defineProps<{
     modelValue?: TimeRange
+    pickerRange: TimeRange
 }>()
 
 const emit = defineEmits(['update:modelValue', 'change', 'startPicking', 'picking', 'endPicking'])
 
-const dates = [
-    new Date(2022, 0, 1),
-    new Date(2022, 0, 2),
-    new Date(2022, 0, 3),
-    new Date(2022, 0, 4),
-    new Date(2022, 0, 5),
-    new Date(2022, 0, 6),
-    new Date(2022, 0, 7),
-    new Date(2022, 0, 8),
-    new Date(2022, 0, 9),
-    new Date(2022, 0, 10),
-    new Date(2022, 0, 11),
-]
+const dates = $computed(() => {
+    return eachDayOfInterval(timeRangeToInterval(props.pickerRange))
+})
 
 type State = 'wait' | 'picking_start' | 'picked_start' | 'picking_end'
 type Action = 'picking' | 'picked'
 
 let state: State = $ref('wait')
-let selectingTimeRange: TimeRange = $ref(undefined)
+let selectingTimeRange: PickingTimeRange | undefined = $ref(undefined)
 
 const activatedDayBar = $computed(
     () => state === 'picking_start' || state === 'picked_start' || state === 'picking_end',
 )
 
 const currentTimeRange = $computed(() => {
-    const timeRange = selectingTimeRange ?? props.modelValue
-
-    if (!timeRange) {
-        return timeRange
-    }
-
-    return [...timeRange].filter((t) => !!t).sort((t1, t2) => t1.valueOf() - t2.valueOf())
+    return normalizeTimeRange(selectingTimeRange ?? props.modelValue)
 })
 
 // 一个简单的状态机，处理与选择时间区间操作相关的所有交互逻辑
@@ -121,6 +113,12 @@ const STATE_ACTION_HANDLERS: {
             if (time) {
                 selectingTimeRange = [selectingTimeRange![0], time]
             }
+
+            assert(
+                selectingTimeRange === undefined || isTimeRange(selectingTimeRange),
+                'Invalid selecting time range',
+            )
+
             emit('endPicking', selectingTimeRange)
             onModelValueChange(selectingTimeRange)
             selectingTimeRange = undefined
@@ -137,7 +135,7 @@ function onPicked(time: Date | undefined) {
     dispatch('picked', time)
 }
 
-function onModelValueChange(timeRange: TimeRange) {
+function onModelValueChange(timeRange: TimeRange | undefined) {
     emit('update:modelValue', timeRange)
     emit('change', timeRange)
 }
