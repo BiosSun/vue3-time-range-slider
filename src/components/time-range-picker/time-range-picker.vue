@@ -3,6 +3,8 @@
         <template v-for="date of dates" :key="date.valueOf()">
             <DayBar
                 :date="date"
+                :min="min"
+                :max="max"
                 :timeRange="currentTimeRange"
                 :activated="activatedDayBar"
                 @picking="onPicking"
@@ -17,23 +19,18 @@ export default { name: 'TimeRangeDirectPicker' }
 <script lang="ts" setup>
 import { eachDayOfInterval } from 'date-fns'
 import DayBar from './day-bar.vue'
-import assert, {
-    isTimeRange,
-    PickingTimeRange,
-    TimeRange,
-    timeRangeToInterval,
-    normalizeTimeRange,
-} from './util'
+import { assert, isTimeRange, PickingTimeRange, TimeRange, normalizeTimeRange } from './util'
 
 const props = defineProps<{
     modelValue?: TimeRange
-    pickerRange: TimeRange
+    min: Date
+    max: Date
 }>()
 
 const emit = defineEmits(['update:modelValue', 'change', 'startPicking', 'picking', 'endPicking'])
 
 const dates = $computed(() => {
-    return eachDayOfInterval(timeRangeToInterval(props.pickerRange))
+    return eachDayOfInterval({ start: props.min, end: props.max })
 })
 
 type State = 'wait' | 'picking_start' | 'picked_start' | 'picking_end'

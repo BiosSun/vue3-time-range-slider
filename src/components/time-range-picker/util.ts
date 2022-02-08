@@ -82,7 +82,7 @@ export function clamp(val: number, min: number, max: number): number {
     return Math.min(Math.max(min, val), max)
 }
 
-export default function assert(condition: unknown, message?: string): asserts condition {
+export function assert(condition: unknown, message?: string): asserts condition {
     if (!condition) {
         throw new Error(message)
     }

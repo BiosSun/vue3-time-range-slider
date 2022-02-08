@@ -12,6 +12,16 @@
 
         <TimeRuler />
 
+        <template v-for="(rail, index) of disabledRails" :key="index">
+            <div
+                class="r-time-range-direct-picker__day-bar__disabled-rail"
+                :style="{
+                    '--start': rail[0],
+                    '--end': rail[1],
+                }"
+            />
+        </template>
+
         <div
             v-if="rail !== undefined"
             class="r-time-range-direct-picker__day-bar__rail"
@@ -41,7 +51,7 @@
 <script lang="ts" setup>
 /// <reference types="vue/macros-global" />
 
-import { format, startOfDay, endOfDay } from 'date-fns'
+import { format, startOfDay, endOfDay, clamp as clampTime, isEqual } from 'date-fns'
 import { TimeRange, PickingTimeRange, getStartTime, getEndTime, clamp } from './util'
 import TimeRuler from './time-ruler.vue'
 
@@ -53,6 +63,8 @@ const props = defineProps<{
     date: Date
     timeRange?: TimeRange | PickingTimeRange
     activated?: boolean
+    min?: Date
+    max?: Date
 }>()
 
 const emit = defineEmits([
@@ -70,12 +82,13 @@ const emit = defineEmits([
     'picked',
 ])
 
-const rootEl = $ref<HTMLDivElement | null>(null)
+const rootEl = $ref<HTMLDivElement>()
 
 const title = $computed(() => format(props.date, 'yyyy-MM-dd'))
 
 const startTimeOfDay = $computed(() => startOfDay(props.date))
 const endTimeOfDay = $computed(() => endOfDay(props.date))
+const intervalOfDay = $computed(() => ({ start: startTimeOfDay, end: endTimeOfDay }))
 
 const startTime = $computed(() => getStartTime(props.timeRange))
 const endTime = $computed(() => getEndTime(props.timeRange))
@@ -89,6 +102,33 @@ const rail = $computed(() => {
     const start = startPoint !== undefined ? startPoint : isEarlier(startTime) ? 0 : undefined
     const end = endPoint !== undefined ? endPoint : isLater(endTime) ? 1 : undefined
     return start !== undefined && end !== undefined ? [start, end] : undefined
+})
+
+// TODO: 变量名不太好
+const clampInterval = $computed(() => {
+    let start = clampTime(props.min ?? startTimeOfDay, intervalOfDay)
+    let end = clampTime(props.max ?? endTimeOfDay, intervalOfDay)
+
+    if (start >= end) {
+        end = start = startTimeOfDay
+    }
+
+    return { start, end }
+})
+
+// 禁止选择标识区域
+const disabledRails = $computed(() => {
+    const rails: [number, number][] = []
+
+    if (!isEqual(clampInterval.start, startTimeOfDay)) {
+        rails.push([0, timeToPosition(clampInterval.start)!])
+    }
+
+    if (!isEqual(clampInterval.end, endTimeOfDay)) {
+        rails.push([timeToPosition(clampInterval.end)!, 1])
+    }
+
+    return rails
 })
 
 function onMouseDown(event: MouseEvent) {
@@ -132,11 +172,7 @@ function timeToPosition(time: Date | undefined): number | undefined {
     )
 }
 
-function positionToTime(position: number | undefined): Date | undefined {
-    if (position === undefined) {
-        return undefined
-    }
-
+function positionToTime(position: number): Date {
     return new Date(
         Math.min(
             startTimeOfDay.valueOf() + Math.round(position * MILLISECONDS_OF_DAY),
@@ -145,11 +181,8 @@ function positionToTime(position: number | undefined): Date | undefined {
     )
 }
 
-function getMousePosition(event: MouseEvent): number | undefined {
-    if (!rootEl) {
-        return undefined
-    }
-
+function getMousePosition(event: MouseEvent): number  {
+    // TODO: 需要处理 rootEl 不存在的时候吗？
     const rect = rootEl.getBoundingClientRect()
     const x = event.clientX - rect.left
     const position = x / (rect.width - 1)
@@ -158,7 +191,7 @@ function getMousePosition(event: MouseEvent): number | undefined {
 }
 
 function getMouseTime(event: MouseEvent): Date | undefined {
-    return positionToTime(getMousePosition(event))
+    return clampTime(positionToTime(getMousePosition(event)), clampInterval)
 }
 </script>
 <style lang="scss">
@@ -192,12 +225,16 @@ function getMouseTime(event: MouseEvent): Date | undefined {
     bottom: 0;
 }
 
-.r-time-range-direct-picker__day-bar__rail {
+%rail {
     position: absolute;
     top: 0;
     bottom: 0;
     left: calc(100% * var(--start));
     right: calc(100% - 100% * var(--end));
+}
+
+.r-time-range-direct-picker__day-bar__rail {
+    @extend %rail;
     background: #00aaff30;
 }
 
@@ -208,5 +245,10 @@ function getMouseTime(event: MouseEvent): Date | undefined {
     left: calc(100% * var(--position) - 2px * var(--position));
     width: 2px;
     background: #00aaff;
+}
+
+.r-time-range-direct-picker__day-bar__disabled-rail {
+        @extend %rail;
+    background: #00000030;
 }
 </style>
