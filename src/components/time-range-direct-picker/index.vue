@@ -22,7 +22,7 @@ const props = defineProps<{
     modelValue?: TimeRange
 }>()
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'startPicking', 'picking', 'endPicking'])
 
 const dates = [
     new Date(2022, 0, 1),
@@ -68,6 +68,7 @@ const STATE_ACTION_HANDLERS: {
         picking(time: Date | undefined) {
             if (time) {
                 selectingTimeRange = [time, undefined]
+                emit('startPicking', selectingTimeRange)
                 return 'picking_start'
             }
         },
@@ -81,6 +82,7 @@ const STATE_ACTION_HANDLERS: {
         picking(time: Date | undefined) {
             if (time) {
                 selectingTimeRange = [time, undefined]
+                emit('picking', selectingTimeRange)
             }
         },
 
@@ -88,6 +90,7 @@ const STATE_ACTION_HANDLERS: {
             if (time) {
                 selectingTimeRange = [time, undefined]
             }
+            emit('picking', selectingTimeRange)
             return 'picked_start'
         },
     },
@@ -96,6 +99,7 @@ const STATE_ACTION_HANDLERS: {
         picking(time: Date | undefined) {
             if (time) {
                 selectingTimeRange = [selectingTimeRange![0], time]
+                emit('picking', selectingTimeRange)
                 return 'picking_end'
             }
         },
@@ -109,6 +113,7 @@ const STATE_ACTION_HANDLERS: {
         picking(time: Date | undefined) {
             if (time) {
                 selectingTimeRange = [selectingTimeRange![0], time]
+                emit('picking', selectingTimeRange)
             }
         },
 
@@ -116,6 +121,7 @@ const STATE_ACTION_HANDLERS: {
             if (time) {
                 selectingTimeRange = [selectingTimeRange![0], time]
             }
+            emit('endPicking', selectingTimeRange)
             onModelValueChange(selectingTimeRange)
             selectingTimeRange = undefined
             return 'wait'
