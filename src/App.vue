@@ -3,6 +3,7 @@ import TimeRangePicker from './components/time-range-picker'
 
 const min = new Date(2022, 0, 1, 15, 9, 12, 192)
 const max = new Date(2022, 0, 31, 12, 38, 43, 894)
+const limit = 1000 * 60 * 60 * 24 * 7
 const timeRange = $ref([new Date(2022, 0, 5, 23, 30), new Date(2022, 0, 2, 0, 30)])
 // const timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
 // const timeRange = $ref([new Date(2022, 0, 2, 0, 30), new Date(2022, 0, 2, 23, 30)])
@@ -23,7 +24,7 @@ function onPicked(time: Date) {
 
     {{ timeRange }}
 
-    <TimeRangePicker v-model="timeRange" :min="min" :max="max" />
+    <TimeRangePicker v-model="timeRange" :min="min" :max="max" :limit="limit" />
 
     <hr />
 

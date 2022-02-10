@@ -1,7 +1,20 @@
-import { Interval, endOfMinute, isValid, startOfMinute, isDate } from 'date-fns'
+import {
+    Interval,
+    endOfMinute,
+    isValid,
+    startOfMinute,
+    isDate,
+    clamp as clampDate,
+    subMilliseconds,
+    addMilliseconds,
+} from 'date-fns'
 
 export type TimeRange = Date[]
 export type PickingTimeRange = (Date | undefined)[]
+
+export function isValidDate(date: any): date is Date {
+    return isDate(date) && isValid(date)
+}
 
 export function isTimeRange(
     timeRange: TimeRange | PickingTimeRange | undefined,
@@ -18,8 +31,8 @@ export function normalizeTimeRange(
 
     const [start, end] = timeRange
 
-    if (isDate(start) && isValid(start)) {
-        if (isDate(end) && isValid(end)) {
+    if (isValidDate(start)) {
+        if (isValidDate(end)) {
             if (start!.valueOf() > end!.valueOf()) {
                 return [end!, start]
             }
@@ -30,7 +43,7 @@ export function normalizeTimeRange(
         return [start, undefined]
     }
 
-    if (isDate(end) && isValid(end)) {
+    if (isValidDate(end)) {
         return [end!, undefined]
     }
 
@@ -80,6 +93,17 @@ export function timeRangeToInterval(timeRange: TimeRange | PickingTimeRange): In
 
 export function clamp(val: number, min: number, max: number): number {
     return Math.min(Math.max(min, val), max)
+}
+
+/**
+ * 确保一个时间值被限制在所指定的邻域区间内
+ * NOTE: 这里的邻域是闭区间
+ */
+export function clampDateByClosedNeighbourhood(date: Date, point: Date, radius: number) {
+    return clampDate(date, {
+        start: subMilliseconds(point, radius),
+        end: addMilliseconds(point, radius),
+    })
 }
 
 export function assert(condition: unknown, message?: string): asserts condition {

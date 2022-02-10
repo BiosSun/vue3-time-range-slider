@@ -1,5 +1,5 @@
 <template>
-    <div style="border: 1px solid #000; height: 390px; overflow: auto">
+    <div style="border: 1px solid #000; height: 590px; overflow: auto">
         <template v-for="date of dates" :key="date.valueOf()">
             <DayBar
                 :date="date"
@@ -17,14 +17,23 @@
 export default { name: 'TimeRangeDirectPicker' }
 </script>
 <script lang="ts" setup>
-import { eachDayOfInterval } from 'date-fns'
+import { eachDayOfInterval, clamp as clampDate } from 'date-fns'
 import DayBar from './day-bar.vue'
-import { assert, isTimeRange, PickingTimeRange, TimeRange, normalizeTimeRange } from './util'
+import {
+    assert,
+    isTimeRange,
+    PickingTimeRange,
+    TimeRange,
+    normalizeTimeRange,
+    isValidDate,
+    clampDateByClosedNeighbourhood,
+} from './util'
 
 const props = defineProps<{
     modelValue?: TimeRange
     min: Date
     max: Date
+    limit: number
 }>()
 
 const emit = defineEmits(['update:modelValue', 'change', 'startPicking', 'picking', 'endPicking'])
@@ -79,15 +88,29 @@ const STATE_ACTION_HANDLERS: {
             if (time) {
                 selectingTimeRange = [time, undefined]
             }
-            emit('picking', selectingTimeRange)
-            return 'picked_start'
+
+            // TODO: 这里是否可以优化一下代码的写法？
+            if (isValidDate(selectingTimeRange?.[0])) {
+                emit('picking', selectingTimeRange)
+                return 'picked_start'
+            } else {
+                emit('endPicking', selectingTimeRange)
+                selectingTimeRange = undefined
+                return 'wait'
+            }
         },
     },
 
     picked_start: {
         picking(time: Date | undefined) {
             if (time) {
-                selectingTimeRange = [selectingTimeRange![0], time]
+                // TODO: 重复代码
+                selectingTimeRange = [
+                    selectingTimeRange![0],
+                    props.limit
+                        ? clampDateByClosedNeighbourhood(time, selectingTimeRange![0]!, props.limit)
+                        : time,
+                ]
                 emit('picking', selectingTimeRange)
                 return 'picking_end'
             }
@@ -101,14 +124,26 @@ const STATE_ACTION_HANDLERS: {
     picking_end: {
         picking(time: Date | undefined) {
             if (time) {
-                selectingTimeRange = [selectingTimeRange![0], time]
+                // TODO: 重复代码
+                selectingTimeRange = [
+                    selectingTimeRange![0],
+                    props.limit
+                        ? clampDateByClosedNeighbourhood(time, selectingTimeRange![0]!, props.limit)
+                        : time,
+                ]
                 emit('picking', selectingTimeRange)
             }
         },
 
         picked(time: Date | undefined) {
             if (time) {
-                selectingTimeRange = [selectingTimeRange![0], time]
+                // TODO: 重复代码
+                selectingTimeRange = [
+                    selectingTimeRange![0],
+                    props.limit
+                        ? clampDateByClosedNeighbourhood(time, selectingTimeRange![0]!, props.limit)
+                        : time,
+                ]
             }
 
             assert(
