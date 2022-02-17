@@ -52,7 +52,7 @@
 /// <reference types="vue/macros-global" />
 
 import { format, startOfDay, endOfDay, clamp as clampTime, isEqual } from 'date-fns'
-import { TimeRange, PickingTimeRange, getStartTime, getEndTime, clamp } from './util'
+import { Range, getStartPoint, getEndPoint, clamp } from './util'
 import TimeRuler from './time-ruler.vue'
 
 const MILLISECONDS_OF_MINUTE = 1000 * 60
@@ -61,13 +61,13 @@ const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
 
 const props = defineProps<{
     date: Date
-    timeRange?: TimeRange | PickingTimeRange
+    timeRange?: Range
     activated?: boolean
     min?: Date
     max?: Date
 }>()
 
-const emit = defineEmits([
+const emit = defineEmits<{
     /**
      * picking 事件会在两种情况下触发：
      *
@@ -76,11 +76,11 @@ const emit = defineEmits([
      *
      * 当 picking 事件触发时，事件参数为鼠标触发点所对应的时刻（单位：分钟）。
      */
-    'picking',
+    (e: 'picking', v: Date): void
 
     /** 当用户在 DayBar 上松开鼠标时，将会触发 picked 事件，其参数与 picking 事件相同。 */
-    'picked',
-])
+    (e: 'picked', v: Date): void
+}>()
 
 const rootEl = $ref<HTMLDivElement>()
 
@@ -90,8 +90,8 @@ const startTimeOfDay = $computed(() => startOfDay(props.date))
 const endTimeOfDay = $computed(() => endOfDay(props.date))
 const intervalOfDay = $computed(() => ({ start: startTimeOfDay, end: endTimeOfDay }))
 
-const startTime = $computed(() => getStartTime(props.timeRange))
-const endTime = $computed(() => getEndTime(props.timeRange))
+const startTime = $computed(() => getStartPoint(props.timeRange))
+const endTime = $computed(() => getEndPoint(props.timeRange))
 
 // 选中区域的起点和终点（若起点或终点不在当前 DayBar 所表示的一天的时间范围中，则为 undefined）
 const startPoint = $computed(() => (isIn(startTime) ? timeToPosition(startTime) : undefined))
@@ -181,7 +181,7 @@ function positionToTime(position: number): Date {
     )
 }
 
-function getMousePosition(event: MouseEvent): number  {
+function getMousePosition(event: MouseEvent): number {
     // TODO: 需要处理 rootEl 不存在的时候吗？
     const rect = rootEl.getBoundingClientRect()
     const x = event.clientX - rect.left
@@ -190,7 +190,7 @@ function getMousePosition(event: MouseEvent): number  {
     return clamp(position, 0, 1)
 }
 
-function getMouseTime(event: MouseEvent): Date | undefined {
+function getMouseTime(event: MouseEvent): Date {
     return clampTime(positionToTime(getMousePosition(event)), clampInterval)
 }
 </script>
@@ -248,7 +248,7 @@ function getMouseTime(event: MouseEvent): Date | undefined {
 }
 
 .r-time-range-direct-picker__day-bar__disabled-rail {
-        @extend %rail;
+    @extend %rail;
     background: #00000030;
 }
 </style>

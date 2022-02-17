@@ -1,14 +1,31 @@
 <script setup lang="ts">
+import { Ref } from 'vue'
+import { addHours, parse, isValid } from 'date-fns'
 import TimeRangePicker from './components/time-range-picker'
 
-const min = new Date(2022, 0, 1, 15, 9, 12, 192)
-const max = new Date(2022, 0, 31, 12, 38, 43, 894)
-const limit = 1000 * 60 * 60 * 24 * 7
-const timeRange = $ref([new Date(2022, 0, 5, 23, 30), new Date(2022, 0, 2, 0, 30)])
-// const timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
-// const timeRange = $ref([new Date(2022, 0, 2, 0, 30), new Date(2022, 0, 2, 23, 30)])
+let min = new Date(2022, 0, 1, 15, 9, 12, 192)
+let max = new Date(2022, 0, 31, 12, 38, 43, 894)
+let limit = 1000 * 60 * 60 * 24 * 7
+let timeRange: Date[] | undefined = $ref([
+    new Date(2022, 0, 5, 23, 30),
+    new Date(2022, 0, 2, 0, 30),
+])
+// let timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
+// let timeRange = $ref([new Date(2022, 0, 2, 0, 30), new Date(2022, 0, 2, 23, 30)])
 
-const activated = $ref(false)
+let isMutation = $ref(false)
+
+function onTimeRangeChange(range: any) {
+    if (isMutation) {
+        if (range) {
+            range = [addHours(range[0], 1), addHours(range[1], 2)]
+        }
+    }
+
+    timeRange = range
+}
+
+let activated = $ref(false)
 
 function onPicking(time: Date) {
     console.info('picking', time)
@@ -17,14 +34,78 @@ function onPicking(time: Date) {
 function onPicked(time: Date) {
     console.info('picked', time)
 }
+
+let dateTimeInputValue: Date | null = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
+
+const inputMinStr: string = $ref('2022-01-02 12:09:12')
+const inputMaxStr: string = $ref('2022-01-06 15:38:43')
+
+const inputMin: Date | undefined = $computed(() => parseDateTime(inputMinStr))
+const inputMax: Date | undefined = $computed(() => parseDateTime(inputMaxStr))
+
+function onInputFocus() {
+    console.info('input focus')
+}
+
+function onInputBlur() {
+    console.info('input blur')
+}
+
+function parseDateTime(str: string) {
+    try {
+        const value = parse(str, 'yyyy-MM-dd HH:mm:ss', 0)
+        return isValid(value) ? value : undefined
+    } catch {
+        return undefined
+    }
+}
 </script>
 
 <template>
     <h1>TimeRangePicker</h1>
 
-    {{ timeRange }}
+    <button @click="timeRange = undefined">clean</button>
+    {{ { modelValue: timeRange } }}
 
-    <TimeRangePicker v-model="timeRange" :min="min" :max="max" :limit="limit" />
+    <br />
+
+    <label>
+        <input type="checkbox" v-model="isMutation" />
+        change range value on component update modelValue
+    </label>
+
+    <br />
+
+    <TimeRangePicker
+        :modelValue="timeRange"
+        :min="min"
+        :max="max"
+        :limit="limit"
+        @change="onTimeRangeChange"
+    />
+
+    <hr />
+
+    <h1>TimeRangePicker.DateTimeInput</h1>
+
+    <label>min: <input v-model="inputMinStr" /></label>
+    <label>max: <input v-model="inputMaxStr" /></label>
+
+    <br />
+
+    <button @click="dateTimeInputValue = null">clean</button>
+    {{ { modelValue: dateTimeInputValue } }}
+
+    <br />
+    <br />
+
+    <TimeRangePicker.DateTimeInput
+        v-model="dateTimeInputValue"
+        :min="inputMin"
+        :max="inputMax"
+        @focus="onInputFocus"
+        @blur="onInputBlur"
+    />
 
     <hr />
 
@@ -62,11 +143,31 @@ function onPicked(time: Date) {
         style="border: 1px solid #000"
     />
 
+    <h2>timeRange: [undefined, 2022-01-05 12:00]</h2>
+    <TimeRangePicker.DayBar
+        :activated="activated"
+        :date="new Date(2022, 0, 5)"
+        :timeRange="[undefined, new Date(2022, 0, 5, 12)]"
+        @picking="onPicking"
+        @picked="onPicked"
+        style="border: 1px solid #000"
+    />
+
     <h2>timeRange: [2022-01-05 12:00, 2022-01-05 23:59]</h2>
     <TimeRangePicker.DayBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        @picking="onPicking"
+        @picked="onPicked"
+        style="border: 1px solid #000"
+    />
+
+    <h2>timeRange: [2022-01-05 23:59, 2022-01-05 12:00]</h2>
+    <TimeRangePicker.DayBar
+        :activated="activated"
+        :date="new Date(2022, 0, 5)"
+        :timeRange="[new Date(2022, 0, 5, 23, 59), new Date(2022, 0, 5, 12)]"
         @picking="onPicking"
         @picked="onPicked"
         style="border: 1px solid #000"
