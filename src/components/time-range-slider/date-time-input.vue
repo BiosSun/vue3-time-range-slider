@@ -1,10 +1,10 @@
 <template>
     <div
-        class="r-time-range-direct-picker__date-time-input"
-        :class="{ 'r-time-range-direct-picker__date-time-input--warned': warned }"
+        class="time-range-slider__date-time-input"
+        :class="{ 'time-range-slider__date-time-input--warned': warned }"
     >
         <input
-            class="r-time-range-direct-picker__date-time-input__input r-time-range-direct-picker__date-time-input__date-input"
+            class="time-range-slider__date-time-input__input time-range-slider__date-time-input__date-input"
             ref="dateInput"
             type="date"
             :value="inputDateString"
@@ -15,7 +15,7 @@
             @blur="onBlur"
         />
         <input
-            class="r-time-range-direct-picker__date-time-input__input r-time-range-direct-picker__date-time-input__time-input"
+            class="time-range-slider__date-time-input__input time-range-slider__date-time-input__time-input"
             ref="timeInput"
             type="time"
             :step="1"
@@ -152,31 +152,3 @@ function parseTime(str: string | undefined) {
     }
 }
 </script>
-<style lang="scss">
-.r-time-range-direct-picker__date-time-input {
-    display: flex;
-    gap: 8px;
-}
-
-.r-time-range-direct-picker__date-time-input__input {
-    box-sizing: border-box;
-    border: 1px solid #767676;
-    border-radius: 2px;
-    height: 24px;
-    padding: 0 0 0 2px;
-
-    &::-webkit-calendar-picker-indicator {
-        margin-inline-start: 0;
-    }
-
-    &:invalid,
-    .r-time-range-direct-picker__date-time-input--warned & {
-        border-color: #d48806;
-        background: #fffbe6;
-    }
-}
-
-.r-time-range-direct-picker__date-time-input__date-input {
-    width: 120px;
-}
-</style>

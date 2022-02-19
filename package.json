@@ -1,5 +1,5 @@
 {
-  "name": "vue-time-range-direct-picker",
+  "name": "vue-time-range-slider",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",

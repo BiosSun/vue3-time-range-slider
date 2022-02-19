@@ -1,0 +1,143 @@
+$b: time-range-slider;
+
+.#{$b} {
+    &__date-time-input {
+        display: flex;
+        gap: 8px;
+
+        &__input {
+            box-sizing: border-box;
+            border: 1px solid #767676;
+            border-radius: 2px;
+            height: 24px;
+            padding: 0 0 0 2px;
+
+            &::-webkit-calendar-picker-indicator {
+                margin-inline-start: 0;
+            }
+
+            &:invalid,
+            &--warned & {
+                border-color: #d48806;
+                background: #fffbe6;
+            }
+        }
+
+        &__date-input {
+            width: 120px;
+        }
+    }
+
+    &__slider-bar-container {
+        border: 1px solid #000;
+        height: 290px;
+        overflow: auto;
+    }
+
+    &__slider-bar {
+        position: relative;
+        height: var(--time-range-slider__slider-bar--height, 34px);
+        border-bottom: 1px solid #000;
+
+        > .#{$b}__time-ruler {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        &__title {
+            position: absolute;
+            left: 5px;
+            top: 0px;
+            font-size: 12px;
+            line-height: 21px;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        %rail {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: calc(100% * var(--start));
+            right: calc(100% - 100% * var(--end));
+        }
+
+        &__disabled-rail {
+            @extend %rail;
+            background: #00000030;
+            pointer-events: none;
+        }
+
+        &__rail {
+            @extend %rail;
+            background: #00aaff30;
+            pointer-events: none;
+        }
+
+        &__point {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: calc(100% * var(--position) - 2px * var(--position));
+            width: 2px;
+            background: #00aaff;
+        }
+    }
+
+    &__time-ruler {
+        height: 13px;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-evenly;
+
+        font-size: 12px;
+        line-height: 12px;
+
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: 'tnum';
+
+        user-select: none;
+        pointer-events: none;
+
+        > {
+            flex: 0 0 1px;
+            max-width: 1px;
+            min-width: 1px;
+        }
+
+        &__scale {
+            position: relative;
+
+            &:before {
+                content: '';
+
+                position: absolute;
+                top: 9px;
+                bottom: 0;
+                left: 0;
+                right: 0;
+
+                width: 1px;
+
+                background: currentColor;
+            }
+
+            &:empty {
+                &:before {
+                    top: 10px;
+                    opacity: 0.5;
+                }
+            }
+
+            &__label {
+                position: absolute;
+                left: 50%;
+                top: 0;
+                transform: translateX(-50%) scale(0.7);
+                transform-origin: top center;
+            }
+        }
+    }
+}

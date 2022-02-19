@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Ref } from 'vue'
 import { addHours, parse, isValid } from 'date-fns'
-import TimeRangePicker from './components/time-range-picker'
+import TimeRangeSlider from './components/time-range-slider'
 
 let min = new Date(2022, 0, 1, 15, 9, 12, 192)
 let max = new Date(2022, 0, 31, 12, 38, 43, 894)
@@ -62,7 +62,7 @@ function parseDateTime(str: string) {
 </script>
 
 <template>
-    <h1>TimeRangePicker</h1>
+    <h1>TimeRangeSlider</h1>
 
     <button @click="timeRange = undefined">clean</button>
     {{ { modelValue: timeRange } }}
@@ -76,7 +76,7 @@ function parseDateTime(str: string) {
 
     <br />
 
-    <TimeRangePicker
+    <TimeRangeSlider
         :modelValue="timeRange"
         :min="min"
         :max="max"
@@ -86,7 +86,7 @@ function parseDateTime(str: string) {
 
     <hr />
 
-    <h1>TimeRangePicker.DateTimeInput</h1>
+    <h1>TimeRangeSlider.DateTimeInput</h1>
 
     <label>min: <input v-model="inputMinStr" /></label>
     <label>max: <input v-model="inputMaxStr" /></label>
@@ -99,7 +99,7 @@ function parseDateTime(str: string) {
     <br />
     <br />
 
-    <TimeRangePicker.DateTimeInput
+    <TimeRangeSlider.DateTimeInput
         v-model="dateTimeInputValue"
         :min="inputMin"
         :max="inputMax"
@@ -109,12 +109,12 @@ function parseDateTime(str: string) {
 
     <hr />
 
-    <h1>TimeRangePicker.DayBar</h1>
+    <h1>TimeRangeSlider.SliderBar</h1>
 
     <label><input type="checkbox" v-model="activated" /> Activated: {{ activated }}</label>
 
     <h2>timeRange: undefined</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="undefined"
@@ -124,7 +124,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>timeRange: [undefined, undefined]</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, undefined]"
@@ -134,7 +134,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>timeRange: [2022-01-05 12:00, undefined]</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), undefined]"
@@ -144,7 +144,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>timeRange: [undefined, 2022-01-05 12:00]</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, new Date(2022, 0, 5, 12)]"
@@ -154,7 +154,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>timeRange: [2022-01-05 12:00, 2022-01-05 23:59]</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
@@ -164,7 +164,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>timeRange: [2022-01-05 23:59, 2022-01-05 12:00]</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 23, 59), new Date(2022, 0, 5, 12)]"
@@ -174,7 +174,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>min: 2022-01-05 08:30:29, max: undefined</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :min="new Date(2022, 0, 5, 8, 30, 29)"
@@ -185,7 +185,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>min: undefined, max: 2022-01-05 23:09:56</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :max="new Date(2022, 0, 5, 23, 9, 56)"
@@ -196,7 +196,7 @@ function parseDateTime(str: string) {
     />
 
     <h2>min: 2022-01-05 08:30:29, max: 2022-01-05 23:09:56</h2>
-    <TimeRangePicker.DayBar
+    <TimeRangeSlider.SliderBar
         :activated="activated"
         :date="new Date(2022, 0, 5)"
         :min="new Date(2022, 0, 5, 8, 30, 29)"

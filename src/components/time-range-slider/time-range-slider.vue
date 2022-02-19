@@ -25,9 +25,9 @@
                 />
             </div>
         </div>
-        <div class="r-time-range-direct-picker__day-bar-container" ref="sliderContainer">
+        <div class="time-range-slider__slider-bar-container" ref="sliderContainer">
             <template v-for="date of slider.dates" :key="date.valueOf()">
-                <DayBar
+                <SliderBar
                     :date="date"
                     :min="min"
                     :max="max"
@@ -40,9 +40,6 @@
         </div>
     </div>
 </template>
-<script lang="ts">
-export default { name: 'TimeRangeDirectPicker' }
-</script>
 <script lang="ts" setup>
 import {
     differenceInMilliseconds,
@@ -54,7 +51,7 @@ import {
     addMilliseconds,
 } from 'date-fns'
 import { computed, reactive, watch } from 'vue'
-import DayBar from './day-bar.vue'
+import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
 import {
     Range,
@@ -190,7 +187,7 @@ const slider = reactive({
             },
 
             picked() {
-                // 有时用户会在其它地方按下鼠标，并在 DayBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
+                // 有时用户会在其它地方按下鼠标，并在 SliderBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
             },
         },
 
@@ -221,7 +218,7 @@ const slider = reactive({
             },
 
             picked() {
-                // 有时用户会在其它地方按下鼠标，并在 DayBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
+                // 有时用户会在其它地方按下鼠标，并在 SliderBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
             },
         },
 
@@ -412,10 +409,3 @@ function dayPositionToTime(startTimeOfDay: Date, position: number): Date {
     )
 }
 </script>
-<style lang="scss">
-.r-time-range-direct-picker__day-bar-container {
-    border: 1px solid #000;
-    height: 290px;
-    overflow: auto;
-}
-</style>
