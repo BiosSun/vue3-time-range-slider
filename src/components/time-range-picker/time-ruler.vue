@@ -51,9 +51,6 @@
     font-size: 12px;
     line-height: 12px;
 
-    font-family: -apple-system, BlinkMacSystemFont, segoe ui, Roboto, helvetica neue, Arial,
-        noto sans, sans-serif;
-
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
 

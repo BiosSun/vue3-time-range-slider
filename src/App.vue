@@ -212,5 +212,7 @@ function parseDateTime(str: string) {
 #app {
     color: #2c3e50;
     margin-top: 60px;
+    font-family: -apple-system, BlinkMacSystemFont, segoe ui, Roboto, helvetica neue, Arial,
+        noto sans, sans-serif;
 }
 </style>

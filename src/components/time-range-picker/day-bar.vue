@@ -1,8 +1,5 @@
 <template>
-    <div
-        ref="rootEl"
-        class="r-time-range-direct-picker__day-bar"
-    >
+    <div ref="rootEl" class="r-time-range-direct-picker__day-bar">
         <div class="r-time-range-direct-picker__day-bar__title">
             {{ title }}
         </div>
@@ -157,14 +154,6 @@ function timeToPosition(time: Date | undefined): number | undefined {
     pointer-events: none;
 }
 
-.r-time-range-direct-picker__day-bar__track {
-    position: absolute;
-    left: 1px;
-    right: 1px;
-    top: 0;
-    bottom: 0;
-}
-
 %rail {
     position: absolute;
     top: 0;
@@ -173,9 +162,16 @@ function timeToPosition(time: Date | undefined): number | undefined {
     right: calc(100% - 100% * var(--end));
 }
 
+.r-time-range-direct-picker__day-bar__disabled-rail {
+    @extend %rail;
+    background: #00000030;
+    pointer-events: none;
+}
+
 .r-time-range-direct-picker__day-bar__rail {
     @extend %rail;
     background: #00aaff30;
+    pointer-events: none;
 }
 
 .r-time-range-direct-picker__day-bar__point {
@@ -185,10 +181,5 @@ function timeToPosition(time: Date | undefined): number | undefined {
     left: calc(100% * var(--position) - 2px * var(--position));
     width: 2px;
     background: #00aaff;
-}
-
-.r-time-range-direct-picker__day-bar__disabled-rail {
-    @extend %rail;
-    background: #00000030;
 }
 </style>
