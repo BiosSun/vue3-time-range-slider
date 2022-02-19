@@ -1,11 +1,11 @@
-# Vue 3 + Typescript + Vite
+# Time Range Slider
 
-This template should help get you started developing with Vue 3 and Typescript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 限制
 
-## Recommended IDE Setup
+-   只能在一个有限的起始时间内进行选择，且起始时间相距不应太长（一年内）；
+-   允许选择的时间区间不应太长，否则用户体验会比较差（尽量确保可选区间最长不超过面板视口能够完整显示的天数）；
+-   若时间精度较高，而面板宽度较窄，那么用户较难以精确选中时间点（但可以输入）。
 
-- [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
+因此，建议将该组件用于以下场景：
 
-## Type Support For `.vue` Imports in TS
-
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's `.vue` type support plugin by running `Volar: Switch TS Plugin on/off` from VSCode command palette.
+**让用户在一个最长仨月的有限区间内选择一段较短的子区间（最长十天）。**
