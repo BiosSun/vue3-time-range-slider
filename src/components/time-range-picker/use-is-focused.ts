@@ -44,7 +44,7 @@ export default function useIsFocused(options: Options) {
     }
 
     return {
-        isFocused,
+        isFocused: $$(isFocused),
         onFocus,
         onBlur,
     }

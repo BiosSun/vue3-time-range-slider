@@ -25,16 +25,16 @@
                 />
             </div>
         </div>
-        <div class="r-time-range-direct-picker__day-bar-container">
+        <div class="r-time-range-direct-picker__day-bar-container" ref="sliderContainer">
             <template v-for="date of slider.dates" :key="date.valueOf()">
                 <DayBar
                     :date="date"
                     :min="min"
                     :max="max"
                     :timeRange="slider.range"
-                    :activated="slider.activated"
                     @picking="slider.onPicking"
                     @picked="slider.onPicked"
+                    @mousedown="slider.onItemMouseDown"
                 />
             </template>
         </div>
@@ -44,7 +44,15 @@
 export default { name: 'TimeRangeDirectPicker' }
 </script>
 <script lang="ts" setup>
-import { differenceInMilliseconds, eachDayOfInterval } from 'date-fns'
+import {
+    differenceInMilliseconds,
+    eachDayOfInterval,
+    endOfDay,
+    min as minDate,
+    max as maxDate,
+    subMilliseconds,
+    addMilliseconds,
+} from 'date-fns'
 import { computed, reactive, watch } from 'vue'
 import DayBar from './day-bar.vue'
 import DateTimeInput from './date-time-input.vue'
@@ -54,7 +62,8 @@ import {
     isValidRange,
     getLeftPoint,
     getRightPoint,
-    clampTime,
+    clampTime as _clampTime,
+    clamp,
     assert,
     isSameTime,
 } from './util'
@@ -103,7 +112,7 @@ const leftInput = reactive({
     setValue(value: Date | undefined) {
         leftInput.value = value
         leftInput.outputValue =
-            value && rightInput.outputValue ? clampIfLimit(value, rightInput.outputValue) : value
+            value && rightInput.outputValue ? clampTime(value, rightInput.outputValue) : value
     },
     onChange(value: Date | undefined) {
         leftInput.setValue(value)
@@ -119,7 +128,7 @@ const rightInput = reactive({
     setValue(value: Date | undefined) {
         rightInput.value = value
         rightInput.outputValue =
-            value && leftInput.outputValue ? clampIfLimit(value, leftInput.outputValue) : value
+            value && leftInput.outputValue ? clampTime(value, leftInput.outputValue) : value
     },
     onChange(value: Date | undefined) {
         rightInput.setValue(value)
@@ -148,11 +157,15 @@ function resetInputValue(range: Range, force: boolean) {
 type SliderState = 'WAIT' | 'LEFT_PICKING' | 'LEFT_PICKED' | 'RIGHT_PICKING'
 type SliderAction = 'picking' | 'picked'
 
+const sliderContainer: HTMLElement = $ref()
+
 const slider = reactive({
     dates: computed(() => eachDayOfInterval({ start: min, end: max })),
     state: 'WAIT' as SliderState,
     range: [undefined, undefined] as Range,
     activated: false,
+    itemWidth: 0,
+    itemHeight: 0,
 
     get left(): Date | undefined {
         return slider.range[0]
@@ -166,11 +179,12 @@ const slider = reactive({
     ACTION_HANDLERS: {
         WAIT: {
             picking(time: Date | undefined) {
-                if (slider.setRange([time, undefined])) {
+                const clampedTime = clampTime(time)
+                if (clampedTime && slider.setRange([clampedTime, undefined])) {
                     emitStartPicking(slider.range)
                     emitPicking(slider.range)
                     slider.syncToInput()
-                    slider.activated = true
+                    slider.activate()
                     return 'LEFT_PICKING'
                 }
             },
@@ -182,14 +196,14 @@ const slider = reactive({
 
         LEFT_PICKING: {
             picking(time: Date | undefined) {
-                if (slider.setRangePoint('left', time)) {
+                if (slider.setRangePoint('left', clampTime(time))) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                 }
             },
 
             picked(time: Date | undefined) {
-                if (slider.setRangePoint('left', time)) {
+                if (slider.setRangePoint('left', clampTime(time))) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                     return 'LEFT_PICKED'
@@ -199,11 +213,7 @@ const slider = reactive({
 
         LEFT_PICKED: {
             picking(time: Date | undefined) {
-                if (!isValidTime(time)) {
-                    return
-                }
-
-                if (slider.setRangePoint('right', clampIfLimit(time, slider.left!))) {
+                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                     return 'RIGHT_PICKING'
@@ -217,28 +227,22 @@ const slider = reactive({
 
         RIGHT_PICKING: {
             picking(time: Date | undefined) {
-                if (!isValidTime(time)) {
-                    return
-                }
-
-                if (slider.setRangePoint('right', clampIfLimit(time, slider.left!))) {
+                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                 }
             },
 
             picked(time: Date | undefined) {
-                if (isValidTime(time)) {
-                    if (slider.setRangePoint('right', clampIfLimit(time, slider.left!))) {
-                        emitEndPicking(slider.range)
-                    }
+                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
+                    emitEndPicking(slider.range)
                 }
 
                 emitEndPicking(slider.range)
                 slider.syncToInput()
                 emitChange(slider.range as Range) // WAIT
                 slider.setRange(undefined)
-                slider.activated = false
+                slider.inactivate()
 
                 return 'WAIT'
             },
@@ -281,6 +285,55 @@ const slider = reactive({
 
     onPicked(time: Date | undefined) {
         slider.dispatch('picked', time)
+    },
+
+    onItemMouseDown(event: MouseEvent) {
+        // When the slider is in activated state, it doesn't make sense to handle the item's
+        // mousedown event.
+        if (slider.activated) {
+            return
+        }
+
+        const itemRect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+
+        slider.itemWidth = itemRect.width
+        slider.itemHeight = itemRect.height
+
+        slider.onPicking(slider.getTimeByMouseEvent(event))
+    },
+
+    onDocumentMouseMove(event: MouseEvent) {
+        slider.onPicking(slider.getTimeByMouseEvent(event))
+    },
+
+    onDocumentMouseUp(event: MouseEvent) {
+        slider.onPicked(slider.getTimeByMouseEvent(event))
+    },
+
+    activate() {
+        slider.activated = true
+        document.addEventListener('mousemove', slider.onDocumentMouseMove, false)
+        document.addEventListener('mouseup', slider.onDocumentMouseUp, false)
+    },
+
+    inactivate() {
+        slider.activated = false
+        document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
+        document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
+    },
+
+    getTimeByMouseEvent({ clientX, clientY }: MouseEvent) {
+        const { itemWidth, itemHeight, dates } = slider
+        const containerRect = sliderContainer.getBoundingClientRect()
+        const positionOnContainer = clamp(clientY - containerRect.top, 0, containerRect.height)
+
+        let itemIndex = (positionOnContainer + sliderContainer.scrollTop) / itemHeight
+        itemIndex = clamp(Math.floor(itemIndex), 0, dates.length - 1)
+
+        let itemPosition = (clientX - containerRect.left) / (itemWidth - 1)
+        itemPosition = clamp(itemPosition, 0, 1)
+
+        return dayPositionToTime(dates[itemIndex], itemPosition)
     },
 
     dispatch(action: SliderAction, time: Date | undefined) {
@@ -326,8 +379,37 @@ function emitChange(range: Range) {
     emit('change', range)
 }
 
-function clampIfLimit(time: Date, reference: Date) {
-    return limit ? clampTime(time, reference, limit) : time
+function clampTime(time: Date | undefined, reference?: Date) {
+    if (!isValidTime(time)) {
+        return undefined
+    }
+
+    let start: Date = min
+    let end: Date = max
+
+    if (reference && limit) {
+        start = maxDate([start, subMilliseconds(reference, limit)])
+        end = minDate([end, addMilliseconds(reference, limit)])
+
+        if (start.valueOf() > end.valueOf()) {
+            return undefined
+        }
+    }
+
+    return _clampTime(time, start, end)
+}
+
+const MILLISECONDS_OF_MINUTE = 1000 * 60
+const MINUTES_OF_DAY = 60 * 24
+const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
+
+function dayPositionToTime(startTimeOfDay: Date, position: number): Date {
+    return new Date(
+        Math.min(
+            startTimeOfDay.valueOf() + Math.round(position * MILLISECONDS_OF_DAY),
+            endOfDay(startTimeOfDay).valueOf(),
+        ),
+    )
 }
 </script>
 <style lang="scss">

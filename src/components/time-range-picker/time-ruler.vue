@@ -58,6 +58,7 @@
     font-feature-settings: 'tnum';
 
     user-select: none;
+    pointer-events: none;
 
     > {
         flex: 0 0 1px;

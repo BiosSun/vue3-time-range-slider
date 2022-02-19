@@ -2,9 +2,6 @@
     <div
         ref="rootEl"
         class="r-time-range-direct-picker__day-bar"
-        @mousedown="onMouseDown"
-        @mouseup="onMouseUp"
-        @mousemove="onMouseMove"
     >
         <div class="r-time-range-direct-picker__day-bar__title">
             {{ title }}
@@ -49,37 +46,15 @@
     </div>
 </template>
 <script lang="ts" setup>
-/// <reference types="vue/macros-global" />
-
 import { format, startOfDay, endOfDay, clamp as clampTime, isEqual } from 'date-fns'
-import { Range, getStartPoint, getEndPoint, clamp } from './util'
+import { Range, getStartPoint, getEndPoint } from './util'
 import TimeRuler from './time-ruler.vue'
-
-const MILLISECONDS_OF_MINUTE = 1000 * 60
-const MINUTES_OF_DAY = 60 * 24
-const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
 
 const props = defineProps<{
     date: Date
     timeRange?: Range
-    activated?: boolean
     min?: Date
     max?: Date
-}>()
-
-const emit = defineEmits<{
-    /**
-     * picking 事件会在两种情况下触发：
-     *
-     * 1. 若 activated 为 false，则仅当用户在 DayBar 上按下鼠标时触发该事件；
-     * 2. 若为 true，则还会在用户移动鼠标时触发该事件。
-     *
-     * 当 picking 事件触发时，事件参数为鼠标触发点所对应的时刻（单位：分钟）。
-     */
-    (e: 'picking', v: Date): void
-
-    /** 当用户在 DayBar 上松开鼠标时，将会触发 picked 事件，其参数与 picking 事件相同。 */
-    (e: 'picked', v: Date): void
 }>()
 
 const rootEl = $ref<HTMLDivElement>()
@@ -131,20 +106,6 @@ const disabledRails = $computed(() => {
     return rails
 })
 
-function onMouseDown(event: MouseEvent) {
-    emit('picking', getMouseTime(event))
-}
-
-function onMouseUp(event: MouseEvent) {
-    emit('picked', getMouseTime(event))
-}
-
-function onMouseMove(event: MouseEvent) {
-    if (props.activated) {
-        emit('picking', getMouseTime(event))
-    }
-}
-
 // -----------------------------------------------------------------------------
 
 function isIn(time: Date | undefined): boolean {
@@ -171,28 +132,6 @@ function timeToPosition(time: Date | undefined): number | undefined {
         (endTimeOfDay.valueOf() - startTimeOfDay.valueOf())
     )
 }
-
-function positionToTime(position: number): Date {
-    return new Date(
-        Math.min(
-            startTimeOfDay.valueOf() + Math.round(position * MILLISECONDS_OF_DAY),
-            endTimeOfDay.valueOf(),
-        ),
-    )
-}
-
-function getMousePosition(event: MouseEvent): number {
-    // TODO: 需要处理 rootEl 不存在的时候吗？
-    const rect = rootEl.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    const position = x / (rect.width - 1)
-
-    return clamp(position, 0, 1)
-}
-
-function getMouseTime(event: MouseEvent): Date {
-    return clampTime(positionToTime(getMousePosition(event)), clampInterval)
-}
 </script>
 <style lang="scss">
 .r-time-range-direct-picker__day-bar {
@@ -215,6 +154,7 @@ function getMouseTime(event: MouseEvent): Date {
     font-size: 12px;
     line-height: 21px;
     user-select: none;
+    pointer-events: none;
 }
 
 .r-time-range-direct-picker__day-bar__track {

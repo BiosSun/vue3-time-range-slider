@@ -35,7 +35,7 @@ import useIsFocused from './use-is-focused'
 import { clampTime, isSameTime, mergeDateAndTime } from './util'
 
 const { modelValue, min, max, warned } = defineProps<{
-    modelValue: Date | undefined
+    modelValue?: Date
     min?: Date
     max?: Date
     warned?: boolean
@@ -83,7 +83,7 @@ const minTimeAndMaxTimeStrings: (string | undefined)[] = $computed(() => {
     return [minTimeString, maxTimeString]
 })
 
-watch([$$(modelValue), isFocused], ([modelValue, isFocused]) => {
+watch([$$(modelValue), $$(isFocused)], ([modelValue, isFocused]) => {
     // 在用户输入时，不应打乱用户的状态（但这却会导致用户结束输入之后，输入框内容突变为其它值，
     // 不过在现实中，这种场景应该极少出现）
     if (isFocused) {
