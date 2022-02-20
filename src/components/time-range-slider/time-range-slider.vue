@@ -25,18 +25,25 @@
                 />
             </div>
         </div>
-        <div class="time-range-slider__slider-bar-container" ref="sliderContainer">
-            <template v-for="date of slider.dates" :key="date.valueOf()">
+        <div class="time-range-slider__sliders__container" ref="sliderContainer">
+            <div
+                class="time-range-slider__sliders__list"
+                @mousemove="slider.onListMouseMove"
+                @mouseleave="slider.onListMouseLeave"
+            >
                 <SliderBar
+                    v-for="date of slider.dates"
+                    :key="date.valueOf()"
                     :date="date"
                     :min="min"
                     :max="max"
                     :timeRange="slider.range"
+                    :hintTime="slider.hintTime"
                     @picking="slider.onPicking"
                     @picked="slider.onPicked"
                     @mousedown="slider.onItemMouseDown"
                 />
-            </template>
+            </div>
         </div>
     </div>
 </template>
@@ -160,6 +167,7 @@ const slider = reactive({
     dates: computed(() => eachDayOfInterval({ start: min, end: max })),
     state: 'WAIT' as SliderState,
     range: [undefined, undefined] as Range,
+    hintTime: undefined as Date | undefined,
     activated: false,
     itemWidth: 0,
     itemHeight: 0,
@@ -182,6 +190,7 @@ const slider = reactive({
                     emitPicking(slider.range)
                     slider.syncToInput()
                     slider.activate()
+                    slider.hintTime = clampedTime
                     return 'LEFT_PICKING'
                 }
             },
@@ -193,16 +202,20 @@ const slider = reactive({
 
         LEFT_PICKING: {
             picking(time: Date | undefined) {
-                if (slider.setRangePoint('left', clampTime(time))) {
+                const clampedTime = clampTime(time)
+                if (slider.setRangePoint('left', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
+                    slider.hintTime = clampedTime
                 }
             },
 
             picked(time: Date | undefined) {
-                if (slider.setRangePoint('left', clampTime(time))) {
+                const clampedTime = clampTime(time)
+                if (slider.setRangePoint('left', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
+                    slider.hintTime = clampedTime
                     return 'LEFT_PICKED'
                 }
             },
@@ -210,9 +223,11 @@ const slider = reactive({
 
         LEFT_PICKED: {
             picking(time: Date | undefined) {
-                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
+                const clampedTime = clampTime(time, slider.left!)
+                if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
+                    slider.hintTime = clampedTime
                     return 'RIGHT_PICKING'
                 }
             },
@@ -224,15 +239,20 @@ const slider = reactive({
 
         RIGHT_PICKING: {
             picking(time: Date | undefined) {
-                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
+                const clampedTime = clampTime(time, slider.left!)
+                if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
+                    slider.hintTime = clampedTime
                 }
             },
 
             picked(time: Date | undefined) {
-                if (slider.setRangePoint('right', clampTime(time, slider.left!))) {
+                const clampedTime = clampTime(time, slider.left!)
+
+                if (slider.setRangePoint('right', clampedTime)) {
                     emitEndPicking(slider.range)
+                    slider.hintTime = clampedTime
                 }
 
                 emitEndPicking(slider.range)
@@ -284,9 +304,29 @@ const slider = reactive({
         slider.dispatch('picked', time)
     },
 
+    onListMouseMove(event: MouseEvent) {
+        if (slider.activated) {
+            return
+        }
+
+        const itemRect = (event.currentTarget as HTMLElement).children[0].getBoundingClientRect()
+
+        slider.itemWidth = itemRect.width
+        slider.itemHeight = itemRect.height
+
+        const time = slider.getTimeByMouseEvent(event)
+        slider.hintTime = clampTime(time)
+    },
+
+    onListMouseLeave() {
+        if (slider.activated) {
+            return
+        }
+
+        slider.hintTime = undefined
+    },
+
     onItemMouseDown(event: MouseEvent) {
-        // When the slider is in activated state, it doesn't make sense to handle the item's
-        // mousedown event.
         if (slider.activated) {
             return
         }

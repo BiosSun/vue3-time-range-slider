@@ -25,16 +25,6 @@ function onTimeRangeChange(range: any) {
     timeRange = range
 }
 
-let activated = $ref(false)
-
-function onPicking(time: Date) {
-    console.info('picking', time)
-}
-
-function onPicked(time: Date) {
-    console.info('picked', time)
-}
-
 let dateTimeInputValue: Date | null = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
 
 const inputMinStr: string = $ref('2022-01-02 12:09:12')
@@ -111,99 +101,94 @@ function parseDateTime(str: string) {
 
     <h1>TimeRangeSlider.SliderBar</h1>
 
-    <label><input type="checkbox" v-model="activated" /> Activated: {{ activated }}</label>
-
     <h2>timeRange: undefined</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="undefined"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>timeRange: [undefined, undefined]</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, undefined]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>timeRange: [2022-01-05 12:00, undefined]</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), undefined]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>timeRange: [undefined, 2022-01-05 12:00]</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, new Date(2022, 0, 5, 12)]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>timeRange: [2022-01-05 12:00, 2022-01-05 23:59]</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>timeRange: [2022-01-05 23:59, 2022-01-05 12:00]</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 23, 59), new Date(2022, 0, 5, 12)]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>min: 2022-01-05 08:30:29, max: undefined</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :min="new Date(2022, 0, 5, 8, 30, 29)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>min: undefined, max: 2022-01-05 23:09:56</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :max="new Date(2022, 0, 5, 23, 9, 56)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
-        @picking="onPicking"
-        @picked="onPicked"
         style="border: 1px solid #000"
     />
 
     <h2>min: 2022-01-05 08:30:29, max: 2022-01-05 23:09:56</h2>
     <TimeRangeSlider.SliderBar
-        :activated="activated"
         :date="new Date(2022, 0, 5)"
         :min="new Date(2022, 0, 5, 8, 30, 29)"
         :max="new Date(2022, 0, 5, 23, 9, 56)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
-        @picking="onPicking"
-        @picked="onPicked"
+        style="border: 1px solid #000"
+    />
+
+    <h2>hintTime: undefined</h2>
+    <TimeRangeSlider.SliderBar
+        :date="new Date(2022, 0, 5)"
+        :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :hintTime="undefined"
+        style="border: 1px solid #000"
+    />
+
+    <h2>hintTime: 2022-01-06 15:24:00</h2>
+    <TimeRangeSlider.SliderBar
+        :date="new Date(2022, 0, 5)"
+        :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :hintTime="new Date(2022, 0, 6, 15, 24, 0)"
+        style="border: 1px solid #000"
+    />
+
+    <h2>hintTime: 2022-01-05 08:30:29</h2>
+    <TimeRangeSlider.SliderBar
+        :date="new Date(2022, 0, 5)"
+        :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :hintTime="new Date(2022, 0, 5, 8, 30, 29)"
         style="border: 1px solid #000"
     />
 </template>

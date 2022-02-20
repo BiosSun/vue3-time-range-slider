@@ -44,19 +44,27 @@
 </template>
 <script lang="ts" setup>
 import { format, startOfDay, endOfDay, clamp as clampTime, isEqual } from 'date-fns'
-import { Range, getStartPoint, getEndPoint } from './util'
+import { Range, getStartPoint, getEndPoint, isSameDay } from './util'
 import TimeRuler from './time-ruler.vue'
 
 const props = defineProps<{
     date: Date
     timeRange?: Range
+    hintTime?: Date
     min?: Date
     max?: Date
 }>()
 
 const rootEl = $ref<HTMLDivElement>()
 
-const title = $computed(() => format(props.date, 'yyyy-MM-dd'))
+const title = $computed(() => {
+    if (!isSameDay(props.date, props.hintTime)) {
+        return format(props.date, 'yyyy-MM-dd')
+    }
+    else {
+        return format(props.hintTime!, 'yyyy-MM-dd HH:mm:ss')
+    }
+})
 
 const startTimeOfDay = $computed(() => startOfDay(props.date))
 const endTimeOfDay = $computed(() => endOfDay(props.date))

@@ -28,10 +28,12 @@ $b: time-range-slider;
         }
     }
 
-    &__slider-bar-container {
-        border: 1px solid #000;
-        height: 290px;
-        overflow: auto;
+    &__sliders {
+        &__container {
+            border: 1px solid #000;
+            height: 690px;
+            overflow: auto;
+        }
     }
 
     &__slider-bar {
