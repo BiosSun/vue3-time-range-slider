@@ -2,12 +2,16 @@ import {
     Interval,
     isValid,
     isDate,
+    toDate,
     isSameDay as _isSameDay,
     max as maxDate,
     subMilliseconds,
     addMilliseconds,
     startOfDay,
     differenceInMilliseconds,
+    addSeconds,
+    addMinutes,
+    addHours,
 } from 'date-fns'
 
 // Date
@@ -86,6 +90,84 @@ export function clampTime(time: Date, a: Date | undefined, b: Date | number | un
     }
 
     return time
+}
+
+// Step
+// -----------------------------------------------------------------------------
+
+export type SliderStep = 'second' | 'minute' | 'hour'
+
+export function floorTimeOfStep(time: Date, step: SliderStep): Date {
+    time = toDate(time)
+
+    switch (step) {
+        case 'second':
+            time.setMilliseconds(0)
+            break
+        case 'minute':
+            time.setSeconds(0, 0)
+            break
+        case 'hour':
+            time.setMinutes(0, 0, 0)
+            break
+        default:
+            throw new Error('invalid step:' + step)
+    }
+
+    return time
+}
+
+export function ceilTimeOfStep(time: Date, step: SliderStep): Date {
+    switch (step) {
+        case 'second':
+            if (time.getMilliseconds()) {
+                time = addSeconds(time, 1)
+                time.setMilliseconds(0)
+            }
+            return time
+        case 'minute':
+            if (time.getSeconds() || time.getMilliseconds()) {
+                time = addMinutes(time, 1)
+                time.setSeconds(0, 0)
+            }
+            return time
+        case 'hour':
+            if (time.getMinutes() || time.getSeconds() || time.getMilliseconds()) {
+                time = addHours(time, 1)
+                time.setMinutes(0, 0, 0)
+            }
+            return time
+        default:
+            throw new Error('invalid step:' + step)
+    }
+}
+
+export function endTimeOfStep(time: Date, step: SliderStep): Date {
+    time = toDate(time)
+
+    switch (step) {
+        case 'second':
+            time.setMilliseconds(999)
+            break
+        case 'minute':
+            time.setSeconds(59, 999)
+            break
+        case 'hour':
+            time.setMinutes(59, 59, 999)
+            break
+        default:
+            throw new Error('invalid step:' + step)
+    }
+
+    return time
+}
+
+export function clampStartTimeByStep(time: Date, step: SliderStep): Date {
+    return ceilTimeOfStep(time, step)
+}
+
+export function clampEndTimeByStep(time: Date, step: SliderStep): Date {
+    return subMilliseconds(floorTimeOfStep(time, step), 1)
 }
 
 // Range

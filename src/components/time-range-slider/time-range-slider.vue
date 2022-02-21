@@ -70,18 +70,26 @@ import {
     clamp,
     assert,
     isSameTime,
+    SliderStep,
+    ceilTimeOfStep,
+    floorTimeOfStep,
+    clampStartTimeByStep,
+    clampEndTimeByStep,
 } from './util'
+import { $computed } from 'vue/macros'
 
 const {
     modelValue: _modelValue,
-    min,
-    max,
+    min: _min,
+    max: _max,
     limit,
+    step = 'second',
 } = defineProps<{
     modelValue?: Range
     min: Date
     max: Date
     limit: number
+    step?: SliderStep
 }>()
 
 const modelValue = $computed(() => {
@@ -90,15 +98,20 @@ const modelValue = $computed(() => {
     return [isValidTime(left) ? left : undefined, isValidTime(right) ? right : undefined]
 })
 
-watch(
-    [$$(min), $$(max)],
-    ([min, max]) => {
-        assert(isValidTime(min), 'min time is invalid date value')
-        assert(isValidTime(max), 'max time is invalid date value')
-        assert(min.valueOf() < max.valueOf(), 'max time is less than or equal to min time')
-    },
-    { immediate: true },
-)
+const _min_max = $computed(() => {
+    assert(isValidTime(_min), 'min time is invalid date value')
+    assert(isValidTime(_max), 'max time is invalid date value')
+
+    const cmin = clampStartTimeByStep(_min, step)
+    const cmax = clampEndTimeByStep(_max, step)
+
+    assert(cmin.valueOf() < cmax.valueOf(), 'max time is less than or equal to min time')
+
+    return [cmin, cmax]
+})
+
+const min = $computed(() => _min_max[0])
+const max = $computed(() => _min_max[1])
 
 const emit = defineEmits<{
     (e: 'update:modelValue', v: Range | undefined): void

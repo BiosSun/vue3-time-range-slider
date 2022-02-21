@@ -2,9 +2,11 @@
 import { Ref } from 'vue'
 import { addHours, parse, isValid } from 'date-fns'
 import TimeRangeSlider from './components/time-range-slider'
+import { SliderStep } from './components/time-range-slider/util'
 
+let step: SliderStep = $ref('second')
 let min = new Date(2022, 0, 1, 15, 9, 12, 192)
-let max = new Date(2022, 0, 31, 12, 38, 43, 894)
+let max = new Date(2022, 0, 17, 12, 38, 43, 894)
 let limit = 1000 * 60 * 60 * 24 * 7
 let timeRange: Date[] | undefined = $ref([
     new Date(2022, 0, 5, 23, 30),
@@ -60,6 +62,21 @@ function parseDateTime(str: string) {
     <br />
 
     <label>
+        <input type="radio" name="step" v-model="step" value="second" />
+        second
+    </label>
+    <label>
+        <input type="radio" name="step" v-model="step" value="minute" />
+        minute
+    </label>
+    <label>
+        <input type="radio" name="step" v-model="step" value="hour" />
+        hour
+    </label>
+
+    <br />
+
+    <label>
         <input type="checkbox" v-model="isMutation" />
         change range value on component update modelValue
     </label>
@@ -71,6 +88,7 @@ function parseDateTime(str: string) {
         :min="min"
         :max="max"
         :limit="limit"
+        :step="step"
         @change="onTimeRangeChange"
     />
 
