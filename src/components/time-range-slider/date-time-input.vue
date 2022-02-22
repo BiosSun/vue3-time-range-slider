@@ -30,7 +30,7 @@
 </template>
 <script lang="ts" setup>
 import { format, parse, isValid, isSameDay } from 'date-fns'
-import { toRef, watch } from 'vue'
+import { watch } from 'vue'
 import useIsFocused from './use-is-focused'
 import { clampTime, isSameTime, mergeDateAndTime } from './util'
 
