@@ -15,10 +15,11 @@
             @blur="onBlur"
         />
         <input
+            :key="step.s"
             class="time-range-slider__date-time-input__input time-range-slider__date-time-input__time-input"
             ref="timeInput"
             type="time"
-            :step="1"
+            :step="step.s"
             :value="inputTimeString"
             :min="minTimeAndMaxTimeStrings[0]"
             :max="minTimeAndMaxTimeStrings[1]"
@@ -32,13 +33,14 @@
 import { format, parse, isValid, isSameDay } from 'date-fns'
 import { watch } from 'vue'
 import useIsFocused from './use-is-focused'
-import { clampTime, isSameTime, mergeDateAndTime } from './util'
+import { clampTime, isSameTime, mergeDateAndTime, SliderStep, STEP_INFOS } from './util'
 
-const { modelValue, min, max, warned } = defineProps<{
+const { modelValue, min, max, warned, step: stepKey } = defineProps<{
     modelValue?: Date
     min?: Date
     max?: Date
     warned?: boolean
+    step: SliderStep
 }>()
 
 const emit = defineEmits<{
@@ -62,6 +64,8 @@ const { isFocused, onFocus, onBlur } = $(
         },
     }),
 )
+
+const step = $computed(() => STEP_INFOS[stepKey])
 
 const dateInput: HTMLInputElement = $ref()
 const timeInput: HTMLInputElement = $ref()
@@ -102,6 +106,11 @@ watch([$$(modelValue), $$(isFocused)], ([modelValue, isFocused]) => {
     inputTimeString = formatTime(inputDateTime)
 })
 
+watch([$$(step)], () => {
+    // 但一定要注意，step 的改变只可能是从外部引起的，此时我们一定要刷新 inputTimeString
+    inputTimeString = formatTime(inputDateTime)
+})
+
 function onDateChange() {
     inputDateString = dateInput.value
     onModelValueChange()
@@ -137,7 +146,7 @@ function parseDate(str: string | undefined) {
 
 function formatTime(time: Date | undefined) {
     try {
-        return format(time!, 'HH:mm:ss')
+        return format(time!, step.tf)
     } catch {
         return undefined
     }
@@ -145,7 +154,7 @@ function formatTime(time: Date | undefined) {
 
 function parseTime(str: string | undefined) {
     try {
-        const time = parse(str!, 'HH:mm:ss', 0)
+        const time = parse(str!, step.tf, 0)
         return isValid(time) ? time : undefined
     } catch {
         return undefined

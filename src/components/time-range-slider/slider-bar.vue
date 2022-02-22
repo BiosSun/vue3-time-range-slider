@@ -1,140 +1,174 @@
 <template>
-    <div ref="rootEl" class="time-range-slider__slider-bar">
+    <div class="time-range-slider__slider-bar">
         <div class="time-range-slider__slider-bar__title">
             {{ title }}
         </div>
 
         <TimeRuler />
 
-        <template v-for="(rail, index) of disabledRails" :key="index">
+        <template v-for="(track, index) of disabledTracks" :key="index">
             <div
                 class="time-range-slider__slider-bar__disabled-rail"
                 :style="{
-                    '--start': rail[0],
-                    '--end': rail[1],
+                    '--start': track.start,
+                    '--end': track.end,
                 }"
             />
         </template>
 
         <div
-            v-if="rail !== undefined"
+            v-if="activatedRange.track"
             class="time-range-slider__slider-bar__rail"
             :style="{
-                '--start': rail[0],
-                '--end': rail[1],
+                '--start': activatedRange.track.start,
+                '--end': activatedRange.track.end,
             }"
         />
 
         <div
-            v-if="startPoint !== undefined"
+            v-if="activatedRange.start"
             class="time-range-slider__slider-bar__point"
             :style="{
-                '--position': startPoint,
+                '--position': activatedRange.start.position,
             }"
         />
 
         <div
-            v-if="endPoint !== undefined"
+            v-if="activatedRange.end"
             class="time-range-slider__slider-bar__point"
             :style="{
-                '--position': endPoint,
+                '--position': activatedRange.end.position,
             }"
         />
     </div>
 </template>
 <script lang="ts" setup>
-import { format, startOfDay, endOfDay, clamp as clampTime, isEqual } from 'date-fns'
-import { Range, getStartPoint, getEndPoint, isSameDay } from './util'
+import { format, startOfDay, endOfDay, max as maxDate, min as minDate } from 'date-fns'
+import {
+    Range,
+    getStartPoint,
+    getEndPoint,
+    isSameDay,
+    SliderStep,
+    STEP_INFOS,
+    isValidTime,
+    D_MS,
+} from './util'
 import TimeRuler from './time-ruler.vue'
 
-const props = defineProps<{
+const {
+    date,
+    timeRange,
+    hintTime,
+    step: stepKey,
+    min,
+    max,
+} = defineProps<{
     date: Date
     timeRange?: Range
     hintTime?: Date
+    step: SliderStep
     min?: Date
     max?: Date
 }>()
 
-const rootEl = $ref<HTMLDivElement>()
+const step = $computed(() => STEP_INFOS[stepKey])
+const day = $computed(() => ({ date, start: startOfDay(date), end: endOfDay(date) }))
 
 const title = $computed(() => {
-    if (!isSameDay(props.date, props.hintTime)) {
-        return format(props.date, 'yyyy-MM-dd')
+    if (hintTime && isSameDay(day.date, hintTime)) {
+        return format(hintTime, 'yyyy-MM-dd ' + step.tf)
     }
-    else {
-        return format(props.hintTime!, 'yyyy-MM-dd HH:mm:ss')
-    }
+
+    return format(day.date, 'yyyy-MM-dd')
 })
 
-const startTimeOfDay = $computed(() => startOfDay(props.date))
-const endTimeOfDay = $computed(() => endOfDay(props.date))
-const intervalOfDay = $computed(() => ({ start: startTimeOfDay, end: endTimeOfDay }))
+const activatedRange: { track?: Track; start?: Thumb; end?: Thumb } = $computed(() => {
+    const startTime = step.floor(getStartPoint(timeRange))
+    const endTime = step.ceil(getEndPoint(timeRange))
 
-const startTime = $computed(() => getStartPoint(props.timeRange))
-const endTime = $computed(() => getEndPoint(props.timeRange))
+    const startThumb = buildThumb(startTime)
+    const endThumb = buildThumb(endTime)
 
-// 选中区域的起点和终点（若起点或终点不在当前 SliderBar 所表示的一天的时间范围中，则为 undefined）
-const startPoint = $computed(() => (isIn(startTime) ? timeToPosition(startTime) : undefined))
-const endPoint = $computed(() => (isIn(endTime) ? timeToPosition(endTime) : undefined))
+    const track = buildTrack(startTime, endTime)
 
-// 高亮区域（选中区域与当前 SliderBar 所表示的一天的时间范围的交集）
-const rail = $computed(() => {
-    const start = startPoint !== undefined ? startPoint : isEarlier(startTime) ? 0 : undefined
-    const end = endPoint !== undefined ? endPoint : isLater(endTime) ? 1 : undefined
-    return start !== undefined && end !== undefined ? [start, end] : undefined
+    return { track, start: startThumb, end: endThumb }
 })
 
-// TODO: 变量名不太好
-const clampInterval = $computed(() => {
-    let start = clampTime(props.min ?? startTimeOfDay, intervalOfDay)
-    let end = clampTime(props.max ?? endTimeOfDay, intervalOfDay)
+const disabledTracks: Track[] = $computed(() => {
+    const tracks = []
 
-    if (start >= end) {
-        end = start = startTimeOfDay
+    const minTrackEndTime = step.ceil(step.prev(min))
+    const maxTrackStartTime = step.floor(step.next(max))
+
+    const minTrack = buildTrack(day.start, minTrackEndTime)
+    const maxTrack = buildTrack(maxTrackStartTime, day.end)
+
+    if (minTrack) {
+        tracks.push(minTrack)
     }
 
-    return { start, end }
-})
-
-// 禁止选择标识区域
-const disabledRails = $computed(() => {
-    const rails: [number, number][] = []
-
-    if (!isEqual(clampInterval.start, startTimeOfDay)) {
-        rails.push([0, timeToPosition(clampInterval.start)!])
+    if (maxTrack) {
+        tracks.push(maxTrack)
     }
 
-    if (!isEqual(clampInterval.end, endTimeOfDay)) {
-        rails.push([timeToPosition(clampInterval.end)!, 1])
-    }
-
-    return rails
+    return tracks
 })
 
 // -----------------------------------------------------------------------------
 
-function isIn(time: Date | undefined): boolean {
-    return !!(time && time >= startTimeOfDay && time <= endTimeOfDay)
+interface Track {
+    start: number
+    end: number
 }
 
-function isEarlier(time: Date | undefined): boolean {
-    return !!(time && time < startTimeOfDay)
+interface Thumb {
+    position: number
 }
 
-function isLater(time: Date | undefined): boolean {
-    return !!(time && time > endTimeOfDay)
-}
-
-// NOTE: 这里的 position 指的是相对于 SliderBar 内容区域左侧的水平位置（ [0 ~ 1] ）
-
-function timeToPosition(time: Date | undefined): number | undefined {
-    if (time === undefined) {
+function buildTrack(start: Date | undefined, end: Date | undefined): Track | undefined {
+    // 无效的开始/结束时间
+    if (!isValidTime(start) || !isValidTime(end) || start >= end) {
         return undefined
     }
 
-    return (
-        (time.valueOf() - startTimeOfDay.valueOf()) /
-        (endTimeOfDay.valueOf() - startTimeOfDay.valueOf())
-    )
+    // 所传入超始时间都不在当前所表示的这一天内
+    if (end < day.start || start > day.end) {
+        return undefined
+    }
+
+    const startTime = maxDate([start, day.start])
+    const endTime = minDate([end, day.end])
+
+    const startPosition = timeToPosition(startTime)
+    const endPosition = timeToPosition(endTime)
+
+    return {
+        start: startPosition,
+        end: endPosition,
+    }
+}
+
+function buildThumb(time: Date | undefined): Thumb | undefined {
+    // 无效的时间
+    if (!isValidTime(time)) {
+        return undefined
+    }
+
+    // 所传入时间不在当前所表示的这一天内
+    if (time < day.start || time > day.end) {
+        return undefined
+    }
+
+    const position = timeToPosition(time)
+
+    return {
+        position,
+    }
+}
+
+// NOTE: 这里的 position 指的是相对于 SliderBar 内容区域左侧的水平位置（ [0 ~ 1] ）
+function timeToPosition(time: Date): number {
+    return (time.valueOf() - day.start.valueOf()) / (day.end.valueOf() - day.start.valueOf())
 }
 </script>

@@ -12,7 +12,21 @@ import {
     addSeconds,
     addMinutes,
     addHours,
+    startOfSecond,
+    endOfSecond,
+    subSeconds,
+    startOfMinute,
+    endOfMinute,
+    subMinutes,
+    startOfHour,
+    endOfHour,
+    subHours,
 } from 'date-fns'
+import { markRaw } from 'vue'
+
+export const M_MS = 1000 * 60
+export const D_M = 60 * 24
+export const D_MS = M_MS * D_M
 
 // Date
 // -----------------------------------------------------------------------------
@@ -97,77 +111,64 @@ export function clampTime(time: Date, a: Date | undefined, b: Date | number | un
 
 export type SliderStep = 'second' | 'minute' | 'hour'
 
-export function floorTimeOfStep(time: Date, step: SliderStep): Date {
-    time = toDate(time)
+export const STEP_INFOS: {
+    [key in SliderStep]: {
+        key: SliderStep
+        s: number
+        ms: number
+        tf: string // time's format template
+        floor: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+        ceil: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+        prev: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+        next: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+        round: <V extends Date | undefined>(time: V, threshold: number) => V extends Date ? Date : undefined // prettier-ignore
+    }
+} = {
+    second: markRaw({
+        key: 'second',
+        s: 1,
+        ms: 1000,
+        tf: 'HH:mm:ss',
+        floor: (time) => (time ? startOfSecond(time) : undefined) as any,
+        ceil: (time) => (time ? endOfSecond(time) : undefined) as any,
+        prev: (time) => (time ? subSeconds(time, 1) : undefined) as any,
+        next: (time) => (time ? addSeconds(time, 1) : undefined) as any,
+        round: (time, threshold) => (time ? roundByStep(time, startOfSecond(time), 1000, threshold) : undefined) as any, // prettier-ignore
+    }),
+    minute: markRaw({
+        key: 'minute',
+        s: 60,
+        ms: 60000,
+        tf: 'HH:mm',
+        floor: (time) => (time ? startOfMinute(time) : undefined) as any,
+        ceil: (time) => (time ? endOfMinute(time) : undefined) as any,
+        prev: (time) => (time ? subMinutes(time, 1) : undefined) as any,
+        next: (time) => (time ? addMinutes(time, 1) : undefined) as any,
+        round: (time, threshold) => (time ? roundByStep(time, startOfMinute(time), 60000, threshold) : undefined) as any, // prettier-ignore
+    }),
+    hour: markRaw({
+        key: 'hour',
+        s: 3600,
+        ms: 3600000,
+        tf: 'HH:mm',
+        floor: (time) => (time ? startOfHour(time) : undefined) as any,
+        ceil: (time) => (time ? endOfHour(time) : undefined) as any,
+        prev: (time) => (time ? subHours(time, 1) : undefined) as any,
+        next: (time) => (time ? addHours(time, 1) : undefined) as any,
+        round: (time, threshold) => (time ? roundByStep(time, startOfHour(time), 3600000, threshold) : undefined) as any, // prettier-ignore
+    }),
+}
 
-    switch (step) {
-        case 'second':
-            time.setMilliseconds(0)
-            break
-        case 'minute':
-            time.setSeconds(0, 0)
-            break
-        case 'hour':
-            time.setMinutes(0, 0, 0)
-            break
-        default:
-            throw new Error('invalid step:' + step)
+function roundByStep(time: Date, start: Date, len: number, threshold: number): Date {
+    const tv = time.valueOf()
+    const sv = start.valueOf()
+
+    if ((tv - sv) / len < threshold) {
+        return start
     }
 
-    return time
-}
-
-export function ceilTimeOfStep(time: Date, step: SliderStep): Date {
-    switch (step) {
-        case 'second':
-            if (time.getMilliseconds()) {
-                time = addSeconds(time, 1)
-                time.setMilliseconds(0)
-            }
-            return time
-        case 'minute':
-            if (time.getSeconds() || time.getMilliseconds()) {
-                time = addMinutes(time, 1)
-                time.setSeconds(0, 0)
-            }
-            return time
-        case 'hour':
-            if (time.getMinutes() || time.getSeconds() || time.getMilliseconds()) {
-                time = addHours(time, 1)
-                time.setMinutes(0, 0, 0)
-            }
-            return time
-        default:
-            throw new Error('invalid step:' + step)
-    }
-}
-
-export function endTimeOfStep(time: Date, step: SliderStep): Date {
-    time = toDate(time)
-
-    switch (step) {
-        case 'second':
-            time.setMilliseconds(999)
-            break
-        case 'minute':
-            time.setSeconds(59, 999)
-            break
-        case 'hour':
-            time.setMinutes(59, 59, 999)
-            break
-        default:
-            throw new Error('invalid step:' + step)
-    }
-
-    return time
-}
-
-export function clampStartTimeByStep(time: Date, step: SliderStep): Date {
-    return ceilTimeOfStep(time, step)
-}
-
-export function clampEndTimeByStep(time: Date, step: SliderStep): Date {
-    return subMilliseconds(floorTimeOfStep(time, step), 1)
+    // next and floor
+    return new Date(tv + (len - (tv - sv)))
 }
 
 // Range

@@ -6,6 +6,7 @@
                     :modelValue="leftInput.value"
                     :min="min"
                     :max="max"
+                    :step="stepKey"
                     :warned="inputWarned"
                     @update:modelValue="leftInput.onChange"
                     @focus="leftInput.focused = true"
@@ -18,6 +19,7 @@
                     :modelValue="rightInput.value"
                     :min="min"
                     :max="max"
+                    :step="stepKey"
                     :warned="inputWarned"
                     @update:modelValue="rightInput.onChange"
                     @focus="rightInput.focused = true"
@@ -37,10 +39,9 @@
                     :date="date"
                     :min="min"
                     :max="max"
+                    :step="stepKey"
                     :timeRange="slider.range"
                     :hintTime="slider.hintTime"
-                    @picking="slider.onPicking"
-                    @picked="slider.onPicked"
                     @mousedown="slider.onItemMouseDown"
                 />
             </div>
@@ -71,26 +72,29 @@ import {
     assert,
     isSameTime,
     SliderStep,
-    ceilTimeOfStep,
-    floorTimeOfStep,
-    clampStartTimeByStep,
-    clampEndTimeByStep,
+    D_MS,
+    STEP_INFOS,
 } from './util'
 import { $computed } from 'vue/macros'
+
+// API
+// -----------------------------------------------------------------------------
 
 const {
     modelValue: _modelValue,
     min: _min,
     max: _max,
     limit,
-    step = 'second',
+    step: stepKey = 'second',
 } = defineProps<{
     modelValue?: Range
+    step?: SliderStep
     min: Date
     max: Date
     limit: number
-    step?: SliderStep
 }>()
+
+const step = $computed(() => STEP_INFOS[stepKey])
 
 const modelValue = $computed(() => {
     const left = getLeftPoint(_modelValue)
@@ -102,10 +106,10 @@ const _min_max = $computed(() => {
     assert(isValidTime(_min), 'min time is invalid date value')
     assert(isValidTime(_max), 'max time is invalid date value')
 
-    const cmin = clampStartTimeByStep(_min, step)
-    const cmax = clampEndTimeByStep(_max, step)
+    const cmin = step.floor(_min)
+    const cmax = step.floor(_max)
 
-    assert(cmin.valueOf() < cmax.valueOf(), 'max time is less than or equal to min time')
+    assert(cmin.valueOf() < cmax.valueOf(), 'max time is less than or equal to min time.')
 
     return [cmin, cmax]
 })
@@ -120,6 +124,9 @@ const emit = defineEmits<{
     (e: 'picking', v: Range | undefined): void
     (e: 'endPicking', v: Range | undefined): void
 }>()
+
+// Input State
+// -----------------------------------------------------------------------------
 
 const leftInput = reactive({
     value: undefined as Date | undefined,
@@ -170,6 +177,9 @@ function resetInputValue(range: Range, force: boolean) {
         rightInput.value = rightInput.outputValue = range[1]
     }
 }
+
+// Slider State
+// -----------------------------------------------------------------------------
 
 type SliderState = 'WAIT' | 'LEFT_PICKING' | 'LEFT_PICKED' | 'RIGHT_PICKING'
 type SliderAction = 'picking' | 'picked'
@@ -322,10 +332,7 @@ const slider = reactive({
             return
         }
 
-        const itemRect = (event.currentTarget as HTMLElement).children[0].getBoundingClientRect()
-
-        slider.itemWidth = itemRect.width
-        slider.itemHeight = itemRect.height
+        slider.updateItemSize((event.currentTarget as Element).children[0])
 
         const time = slider.getTimeByMouseEvent(event)
         slider.hintTime = clampTime(time)
@@ -340,15 +347,17 @@ const slider = reactive({
     },
 
     onItemMouseDown(event: MouseEvent) {
-        if (slider.activated) {
+        // NOTE:
+        // 这里当 slider 为 activated 状态时，若其 state 依然为 LEFT_PICKED，则仍然触发 picking 事件，
+        // 这是因为当处于 LEFT_PICKED 状态时，只有通过触发 picking 事件才会切换到 RIGHT_PICKING 状态，
+        // 而若不作该处理，那么将只会在 onDocumentMouseMove 触发时才会触发 picking 事件，
+        // 如此一来，用户将无法通过连点两次以便仅选中一个 step 长度（秒/分钟/小时）的时间区间时，
+        // 我认为这对用户体验将是一个极大的损失。
+        if (slider.activated && slider.state !== 'LEFT_PICKED') {
             return
         }
 
-        const itemRect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-
-        slider.itemWidth = itemRect.width
-        slider.itemHeight = itemRect.height
-
+        slider.updateItemSize(event.currentTarget as Element)
         slider.onPicking(slider.getTimeByMouseEvent(event))
     },
 
@@ -386,11 +395,21 @@ const slider = reactive({
         return dayPositionToTime(dates[itemIndex], itemPosition)
     },
 
+    updateItemSize(itemEl: Element) {
+        const itemRect = itemEl.getBoundingClientRect()
+
+        slider.itemWidth = itemRect.width
+        slider.itemHeight = itemRect.height
+    },
+
     dispatch(action: SliderAction, time: Date | undefined) {
         slider.state =
             slider.ACTION_HANDLERS[slider.state as SliderState][action](time) ?? slider.state
     },
 })
+
+// 与外部进行状态同步
+// -----------------------------------------------------------------------------
 
 watch(
     [$$(modelValue), computed(() => slider.state)],
@@ -429,6 +448,9 @@ function emitChange(range: Range) {
     emit('change', range)
 }
 
+// Tools
+// -----------------------------------------------------------------------------
+
 function clampTime(time: Date | undefined, reference?: Date) {
     if (!isValidTime(time)) {
         return undefined
@@ -436,6 +458,8 @@ function clampTime(time: Date | undefined, reference?: Date) {
 
     let start: Date = min
     let end: Date = max
+
+    time = step.round(time, 0.8)
 
     if (reference && limit) {
         start = maxDate([start, subMilliseconds(reference, limit)])
@@ -449,14 +473,10 @@ function clampTime(time: Date | undefined, reference?: Date) {
     return _clampTime(time, start, end)
 }
 
-const MILLISECONDS_OF_MINUTE = 1000 * 60
-const MINUTES_OF_DAY = 60 * 24
-const MILLISECONDS_OF_DAY = MILLISECONDS_OF_MINUTE * MINUTES_OF_DAY
-
 function dayPositionToTime(startTimeOfDay: Date, position: number): Date {
     return new Date(
         Math.min(
-            startTimeOfDay.valueOf() + Math.round(position * MILLISECONDS_OF_DAY),
+            startTimeOfDay.valueOf() + Math.round(position * D_MS),
             endOfDay(startTimeOfDay).valueOf(),
         ),
     )

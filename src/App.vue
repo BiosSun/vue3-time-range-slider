@@ -12,9 +12,10 @@ const sliderMin: Date = $computed(() => parseDateTime(sliderMinStr, prevValidSli
 const sliderMax: Date = $computed(() => parseDateTime(sliderMaxStr, prevValidSliderMax)!)
 let limit = 1000 * 60 * 60 * 24 * 7
 let timeRange: Date[] | undefined = $ref([
-    new Date(2022, 0, 5, 23, 30),
-    new Date(2022, 0, 2, 0, 30),
+    new Date(2022, 0, 5, 23, 45, 20, 111),
+    new Date(2022, 0, 2, 0, 20, 51, 555),
 ])
+
 // let timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
 // let timeRange = $ref([new Date(2022, 0, 2, 0, 30), new Date(2022, 0, 2, 23, 30)])
 
@@ -32,9 +33,9 @@ function onTimeRangeChange(range: any) {
 
 let dateTimeInputValue: Date | null = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
 
+const inputStep: SliderStep = $ref('second')
 const inputMinStr: string = $ref('2022-01-02 12:09:12.938')
 const inputMaxStr: string = $ref('2022-01-06 15:38:43.189')
-
 const inputMin: Date | undefined = $computed(() => parseDateTime(inputMinStr))
 const inputMax: Date | undefined = $computed(() => parseDateTime(inputMaxStr))
 
@@ -62,6 +63,8 @@ function parseDateTime(str: string, prev?: { value: Date }) {
         return prev?.value ?? undefined
     }
 }
+
+const sliderStep: SliderStep = $ref('second')
 </script>
 
 <template>
@@ -77,18 +80,9 @@ function parseDateTime(str: string, prev?: { value: Date }) {
 
     <br />
 
-    <label>
-        <input type="radio" name="step" v-model="step" value="second" />
-        second
-    </label>
-    <label>
-        <input type="radio" name="step" v-model="step" value="minute" />
-        minute
-    </label>
-    <label>
-        <input type="radio" name="step" v-model="step" value="hour" />
-        hour
-    </label>
+    <label><input type="radio" name="step" v-model="step" value="second" /> second</label>
+    <label><input type="radio" name="step" v-model="step" value="minute" /> minute</label>
+    <label><input type="radio" name="step" v-model="step" value="hour" /> hour</label>
 
     <br />
 
@@ -112,13 +106,21 @@ function parseDateTime(str: string, prev?: { value: Date }) {
 
     <h1>TimeRangeSlider.DateTimeInput</h1>
 
+    <br />
+
+    <button @click="dateTimeInputValue = null">clean</button>
+    {{ { modelValue: dateTimeInputValue } }}
+
+    <br />
+
     <label>min: <input v-model="inputMinStr" style="width: 200px" /></label>&nbsp;
     <label>max: <input v-model="inputMaxStr" style="width: 200px" /></label>
 
     <br />
 
-    <button @click="dateTimeInputValue = null">clean</button>
-    {{ { modelValue: dateTimeInputValue } }}
+    <label><input type="radio" name="inputStep" v-model="inputStep" value="second" /> second</label>
+    <label><input type="radio" name="inputStep" v-model="inputStep" value="minute" /> minute</label>
+    <label><input type="radio" name="inputStep" v-model="inputStep" value="hour" /> hour</label>
 
     <br />
     <br />
@@ -127,6 +129,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
         v-model="dateTimeInputValue"
         :min="inputMin"
         :max="inputMax"
+        :step="inputStep"
         @focus="onInputFocus"
         @blur="onInputBlur"
     />
@@ -135,10 +138,18 @@ function parseDateTime(str: string, prev?: { value: Date }) {
 
     <h1>TimeRangeSlider.SliderBar</h1>
 
+
+    <label><input type="radio" name="sliderStep" v-model="sliderStep" value="second" /> second</label>
+    <label><input type="radio" name="sliderStep" v-model="sliderStep" value="minute" /> minute</label>
+    <label><input type="radio" name="sliderStep" v-model="sliderStep" value="hour" /> hour</label>
+
+    <hr />
+
     <h2>timeRange: undefined</h2>
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="undefined"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -146,6 +157,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, undefined]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -153,6 +165,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), undefined]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -160,6 +173,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="[undefined, new Date(2022, 0, 5, 12)]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -167,6 +181,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -174,31 +189,35 @@ function parseDateTime(str: string, prev?: { value: Date }) {
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 23, 59), new Date(2022, 0, 5, 12)]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
     <h2>min: 2022-01-05 08:30:29, max: undefined</h2>
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
-        :min="new Date(2022, 0, 5, 8, 30, 29)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :min="new Date(2022, 0, 5, 8, 30, 29)"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
     <h2>min: undefined, max: 2022-01-05 23:09:56</h2>
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
-        :max="new Date(2022, 0, 5, 23, 9, 56)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :max="new Date(2022, 0, 5, 23, 9, 56)"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
     <h2>min: 2022-01-05 08:30:29, max: 2022-01-05 23:09:56</h2>
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"
+        :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
         :min="new Date(2022, 0, 5, 8, 30, 29)"
         :max="new Date(2022, 0, 5, 23, 9, 56)"
-        :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -207,6 +226,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
         :hintTime="undefined"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -215,6 +235,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
         :hintTime="new Date(2022, 0, 6, 15, 24, 0)"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 
@@ -223,6 +244,7 @@ function parseDateTime(str: string, prev?: { value: Date }) {
         :date="new Date(2022, 0, 5)"
         :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
         :hintTime="new Date(2022, 0, 5, 8, 30, 29)"
+        :step="sliderStep"
         style="border: 1px solid #000"
     />
 </template>
