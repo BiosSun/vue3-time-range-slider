@@ -84,14 +84,14 @@ const {
     modelValue: _modelValue,
     min: _min,
     max: _max,
-    limit,
+    limit: _limit,
     step: stepKey = 'second',
 } = defineProps<{
     modelValue?: Range
     step?: SliderStep
     min: Date
     max: Date
-    limit: number
+    limit?: number
 }>()
 
 const step = $computed(() => STEP_INFOS[stepKey])
@@ -109,13 +109,29 @@ const _min_max = $computed(() => {
     const cmin = step.floor(_min)
     const cmax = step.floor(_max)
 
-    assert(cmin.valueOf() < cmax.valueOf(), 'max time is less than or equal to min time.')
+    assert(cmin.valueOf() < cmax.valueOf(), 'max time is less than or equal to min time')
 
     return [cmin, cmax]
 })
 
 const min = $computed(() => _min_max[0])
 const max = $computed(() => _min_max[1])
+
+const limit = $computed(() => {
+    const value = _limit
+
+    if (value == null) {
+        return undefined
+    }
+
+    assert(Number.isFinite(value), 'limit is invalid number value')
+
+    const normalizedValue = Math.floor(value / step.ms) * step.ms
+
+    assert(normalizedValue > 0, 'limit should be at least one step unit')
+
+    return normalizedValue
+})
 
 const emit = defineEmits<{
     (e: 'update:modelValue', v: Range | undefined): void
@@ -468,11 +484,12 @@ function clampTime(time: Date | undefined, reference?: Date) {
     let start: Date = min
     let end: Date = max
 
-    time = step.round(time, 0.8)
+    time = step.floor(time)
+    reference = step.floor(reference)
 
     if (reference && limit) {
-        start = maxDate([start, subMilliseconds(reference, limit)])
-        end = minDate([end, addMilliseconds(reference, limit)])
+        start = maxDate([start, subMilliseconds(step.next(reference), limit)])
+        end = minDate([end, addMilliseconds(step.prev(reference), limit)])
 
         if (start.valueOf() > end.valueOf()) {
             return undefined

@@ -10,6 +10,7 @@ let prevValidSliderMin = { value: undefined as any as Date }
 let prevValidSliderMax = { value: undefined as any as Date }
 const sliderMin: Date = $computed(() => parseDateTime(sliderMinStr, prevValidSliderMin)!)
 const sliderMax: Date = $computed(() => parseDateTime(sliderMaxStr, prevValidSliderMax)!)
+let limitEnable = $ref(true)
 let limit = 1000 * 60 * 60 * 24 * 7
 let timeRange: Date[] | undefined = $ref([
     new Date(2022, 0, 5, 23, 45, 20, 111),
@@ -75,14 +76,20 @@ const sliderStep: SliderStep = $ref('second')
 
     <br />
 
+    <label><input type="radio" name="step" v-model="step" value="second" /> second</label>
+    <label><input type="radio" name="step" v-model="step" value="minute" /> minute</label>
+    <label><input type="radio" name="step" v-model="step" value="hour" /> hour</label>
+
+    <br />
+
     <label>min: <input v-model="sliderMinStr" style="width: 200px" /></label>&nbsp;
     <label>max: <input v-model="sliderMaxStr" style="width: 200px" /></label>
 
     <br />
 
-    <label><input type="radio" name="step" v-model="step" value="second" /> second</label>
-    <label><input type="radio" name="step" v-model="step" value="minute" /> minute</label>
-    <label><input type="radio" name="step" v-model="step" value="hour" /> hour</label>
+    <label><input type="checkbox" v-model="limitEnable" /> limit enable</label>
+    &nbsp;
+    <input type="number" v-model="limit" :disabled="!limitEnable" />
 
     <br />
 
@@ -97,7 +104,7 @@ const sliderStep: SliderStep = $ref('second')
         :modelValue="timeRange"
         :min="sliderMin"
         :max="sliderMax"
-        :limit="limit"
+        :limit="limitEnable ? limit : undefined"
         :step="step"
         @change="onTimeRangeChange"
     />
@@ -138,9 +145,12 @@ const sliderStep: SliderStep = $ref('second')
 
     <h1>TimeRangeSlider.SliderBar</h1>
 
-
-    <label><input type="radio" name="sliderStep" v-model="sliderStep" value="second" /> second</label>
-    <label><input type="radio" name="sliderStep" v-model="sliderStep" value="minute" /> minute</label>
+    <label
+        ><input type="radio" name="sliderStep" v-model="sliderStep" value="second" /> second</label
+    >
+    <label
+        ><input type="radio" name="sliderStep" v-model="sliderStep" value="minute" /> minute</label
+    >
     <label><input type="radio" name="sliderStep" v-model="sliderStep" value="hour" /> hour</label>
 
     <hr />
