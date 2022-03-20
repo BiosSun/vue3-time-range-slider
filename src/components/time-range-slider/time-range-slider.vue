@@ -208,7 +208,10 @@ const slider = reactive({
         WAIT: {
             picking(time: Date | undefined) {
                 const clampedTime = clampTime(time)
-                if (clampedTime && slider.setRange([clampedTime, undefined])) {
+                if (
+                    slider.setRangePoint('left', clampedTime) &&
+                    slider.setRangePoint('right', clampedTime)
+                ) {
                     emitStartPicking(slider.range)
                     emitPicking(slider.range)
                     slider.syncToInput()
@@ -226,7 +229,10 @@ const slider = reactive({
         LEFT_PICKING: {
             picking(time: Date | undefined) {
                 const clampedTime = clampTime(time)
-                if (slider.setRangePoint('left', clampedTime)) {
+                if (
+                    slider.setRangePoint('left', clampedTime) &&
+                    slider.setRangePoint('right', clampedTime)
+                ) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                     slider.hintTime = clampedTime
@@ -235,7 +241,10 @@ const slider = reactive({
 
             picked(time: Date | undefined) {
                 const clampedTime = clampTime(time)
-                if (slider.setRangePoint('left', clampedTime)) {
+                if (
+                    slider.setRangePoint('left', clampedTime) &&
+                    slider.setRangePoint('right', clampedTime)
+                ) {
                     emitPicking(slider.range)
                     slider.syncToInput()
                     slider.hintTime = clampedTime
