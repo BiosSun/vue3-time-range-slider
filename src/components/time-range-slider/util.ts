@@ -121,7 +121,6 @@ export const STEP_INFOS: {
         ceil: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
         prev: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
         next: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
-        round: <V extends Date | undefined>(time: V, threshold: number) => V extends Date ? Date : undefined // prettier-ignore
     }
 } = {
     second: markRaw({
@@ -133,7 +132,6 @@ export const STEP_INFOS: {
         ceil: (time) => (time ? endOfSecond(time) : undefined) as any,
         prev: (time) => (time ? subSeconds(time, 1) : undefined) as any,
         next: (time) => (time ? addSeconds(time, 1) : undefined) as any,
-        round: (time, threshold) => (time ? roundByStep(time, startOfSecond(time), 1000, threshold) : undefined) as any, // prettier-ignore
     }),
     minute: markRaw({
         key: 'minute',
@@ -144,7 +142,6 @@ export const STEP_INFOS: {
         ceil: (time) => (time ? endOfMinute(time) : undefined) as any,
         prev: (time) => (time ? subMinutes(time, 1) : undefined) as any,
         next: (time) => (time ? addMinutes(time, 1) : undefined) as any,
-        round: (time, threshold) => (time ? roundByStep(time, startOfMinute(time), 60000, threshold) : undefined) as any, // prettier-ignore
     }),
     hour: markRaw({
         key: 'hour',
@@ -155,20 +152,7 @@ export const STEP_INFOS: {
         ceil: (time) => (time ? endOfHour(time) : undefined) as any,
         prev: (time) => (time ? subHours(time, 1) : undefined) as any,
         next: (time) => (time ? addHours(time, 1) : undefined) as any,
-        round: (time, threshold) => (time ? roundByStep(time, startOfHour(time), 3600000, threshold) : undefined) as any, // prettier-ignore
     }),
-}
-
-function roundByStep(time: Date, start: Date, len: number, threshold: number): Date {
-    const tv = time.valueOf()
-    const sv = start.valueOf()
-
-    if ((tv - sv) / len < threshold) {
-        return start
-    }
-
-    // next and floor
-    return new Date(tv + (len - (tv - sv)))
 }
 
 // Range

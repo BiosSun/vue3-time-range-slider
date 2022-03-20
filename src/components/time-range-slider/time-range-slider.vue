@@ -57,6 +57,7 @@ import {
     max as maxDate,
     subMilliseconds,
     addMilliseconds,
+    isSameDay,
 } from 'date-fns'
 import { computed, reactive, watch } from 'vue'
 import SliderBar from './slider-bar.vue'
@@ -152,7 +153,9 @@ const leftInput = reactive({
     setValue(value: Date | undefined) {
         leftInput.value = value
         leftInput.outputValue =
-            value && rightInput.outputValue ? clampTime(value, rightInput.outputValue) : value
+            value && rightInput.outputValue
+                ? clampTime(value, rightInput.outputValue, 'floor')
+                : value
     },
     onChange(value: Date | undefined) {
         leftInput.setValue(value)
@@ -168,7 +171,9 @@ const rightInput = reactive({
     setValue(value: Date | undefined) {
         rightInput.value = value
         rightInput.outputValue =
-            value && leftInput.outputValue ? clampTime(value, leftInput.outputValue) : value
+            value && leftInput.outputValue
+                ? clampTime(value, leftInput.outputValue, 'floor')
+                : value
     },
     onChange(value: Date | undefined) {
         rightInput.setValue(value)
@@ -223,7 +228,7 @@ const slider = reactive({
     ACTION_HANDLERS: {
         WAIT: {
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time)
+                const clampedTime = clampTime(time, undefined, 'near')
                 if (
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
@@ -244,7 +249,7 @@ const slider = reactive({
 
         LEFT_PICKING: {
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time)
+                const clampedTime = clampTime(time, undefined, 'near')
                 if (
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
@@ -256,7 +261,7 @@ const slider = reactive({
             },
 
             picked(time: Date | undefined) {
-                const clampedTime = clampTime(time)
+                const clampedTime = clampTime(time, undefined, 'near')
                 if (
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
@@ -271,7 +276,7 @@ const slider = reactive({
 
         LEFT_PICKED: {
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!)
+                const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
@@ -287,7 +292,7 @@ const slider = reactive({
 
         RIGHT_PICKING: {
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!)
+                const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
@@ -296,7 +301,7 @@ const slider = reactive({
             },
 
             picked(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!)
+                const clampedTime = clampTime(time, slider.left!, 'near')
 
                 if (slider.setRangePoint('right', clampedTime)) {
                     emitEndPicking(slider.range)
@@ -360,7 +365,7 @@ const slider = reactive({
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
         const time = slider.getTimeByMouseEvent(event)
-        slider.hintTime = clampTime(time)
+        slider.hintTime = clampTime(time, undefined, 'near')
     },
 
     onListMouseLeave() {
@@ -476,7 +481,11 @@ function emitChange(range: Range) {
 // Tools
 // -----------------------------------------------------------------------------
 
-function clampTime(time: Date | undefined, reference?: Date) {
+function clampTime(
+    time: Date | undefined,
+    reference: Date | undefined,
+    roundMode: 'floor' | 'near',
+) {
     if (!isValidTime(time)) {
         return undefined
     }
@@ -484,7 +493,7 @@ function clampTime(time: Date | undefined, reference?: Date) {
     let start: Date = min
     let end: Date = max
 
-    time = step.floor(time)
+    time = roundTime(time, roundMode)
     reference = step.floor(reference)
 
     if (reference && limit) {
@@ -497,6 +506,21 @@ function clampTime(time: Date | undefined, reference?: Date) {
     }
 
     return _clampTime(time, start, end)
+}
+
+function roundTime(time: Date, mode: 'floor' | 'near') {
+    switch (mode) {
+        case 'floor':
+            return step.floor(time)
+        case 'near': {
+            const th = 0.9
+            const len = step.ms
+            const tv = time.valueOf()
+            const sv = step.floor(time).valueOf()
+            const nv = sv + len
+            return new Date((tv - sv) / len < th || !isSameDay(tv, nv) ? sv : nv)
+        }
+    }
 }
 
 function dayPositionToTime(startTimeOfDay: Date, position: number): Date {
