@@ -2,7 +2,6 @@ import {
     Interval,
     isValid,
     isDate,
-    toDate,
     isSameDay as _isSameDay,
     max as maxDate,
     subMilliseconds,
@@ -180,7 +179,7 @@ export function isValidRange(range: any): range is Range {
 }
 
 export function isFullRange(range: any): range is Date[] {
-    return isValidRange(range) && !!(range[0] && range[1])
+    return isValidRange(range) && isValidTime(range[0]) && isValidTime(range[1])
 }
 
 export function isEmptyRange(range: Range | undefined): boolean {
@@ -273,4 +272,9 @@ export function assert(condition: unknown, message?: string): asserts condition 
     if (!condition) {
         throw new Error(message)
     }
+}
+
+/** 检查鼠标左键是否被按下 */
+export function detectLeftButton(event: MouseEvent) {
+    return !!(event.buttons & 0b1)
 }

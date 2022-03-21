@@ -66,6 +66,7 @@ import {
     Range,
     isValidTime,
     isValidRange,
+    isFullRange,
     getLeftPoint,
     getRightPoint,
     clampTime as _clampTime,
@@ -75,6 +76,7 @@ import {
     SliderStep,
     D_MS,
     STEP_INFOS,
+    detectLeftButton,
 } from './util'
 import { $computed } from 'vue/macros'
 
@@ -154,7 +156,7 @@ const leftInput = reactive({
         leftInput.value = value
         leftInput.outputValue =
             value && rightInput.outputValue
-                ? clampTime(value, rightInput.outputValue, 'floor')
+                ? clampTime(value, rightInput.outputValue, 'floor', false)
                 : value
     },
     onChange(value: Date | undefined) {
@@ -172,7 +174,7 @@ const rightInput = reactive({
         rightInput.value = value
         rightInput.outputValue =
             value && leftInput.outputValue
-                ? clampTime(value, leftInput.outputValue, 'floor')
+                ? clampTime(value, leftInput.outputValue, 'floor', false)
                 : value
     },
     onChange(value: Date | undefined) {
@@ -227,8 +229,9 @@ const slider = reactive({
     // 一个简单的状态机，处理与选择时间区间操作相关的所有交互逻辑
     ACTION_HANDLERS: {
         WAIT: {
+            // 用户在 sliders 面板上按下鼠标：
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, undefined, 'near')
+                const clampedTime = clampTime(time, undefined, 'near', true)
                 if (
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
@@ -248,8 +251,9 @@ const slider = reactive({
         },
 
         LEFT_PICKING: {
+            // 用户按下鼠标的同时移动鼠标：
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, undefined, 'near')
+                const clampedTime = clampTime(time, undefined, 'near', false)
                 if (
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
@@ -260,23 +264,18 @@ const slider = reactive({
                 }
             },
 
-            picked(time: Date | undefined) {
-                const clampedTime = clampTime(time, undefined, 'near')
-                if (
-                    slider.setRangePoint('left', clampedTime) &&
-                    slider.setRangePoint('right', clampedTime)
-                ) {
-                    emitPicking(slider.range)
-                    slider.syncToInput()
-                    slider.hintTime = clampedTime
+            // 用户松开鼠标：
+            picked() {
+                if (isFullRange(slider.range)) {
                     return 'LEFT_PICKED'
                 }
             },
         },
 
         LEFT_PICKED: {
+            // 用户选中左时间点后，按下或直接移动鼠标：
             picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!, 'near')
+                const clampedTime = clampTime(time, slider.left!, 'near', true)
                 if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
@@ -291,8 +290,9 @@ const slider = reactive({
         },
 
         RIGHT_PICKING: {
-            picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!, 'near')
+            // 用户继续移动鼠标（无论此时鼠标是否被按下）：
+            picking(time: Date | undefined, event: MouseEvent) {
+                const clampedTime = clampTime(time, slider.left!, 'near', !detectLeftButton(event))
                 if (slider.setRangePoint('right', clampedTime)) {
                     emitPicking(slider.range)
                     slider.syncToInput()
@@ -300,14 +300,8 @@ const slider = reactive({
                 }
             },
 
-            picked(time: Date | undefined) {
-                const clampedTime = clampTime(time, slider.left!, 'near')
-
-                if (slider.setRangePoint('right', clampedTime)) {
-                    emitEndPicking(slider.range)
-                    slider.hintTime = clampedTime
-                }
-
+            // 用户松开鼠标：
+            picked() {
                 emitEndPicking(slider.range)
                 slider.syncToInput()
                 emitChange(slider.range as Range) // WAIT
@@ -319,7 +313,10 @@ const slider = reactive({
         },
     } as {
         [state in SliderState]: {
-            [action in SliderAction]: (time: Date | undefined) => SliderState | void
+            [action in SliderAction]: (
+                time: Date | undefined,
+                event: MouseEvent,
+            ) => SliderState | void
         }
     },
 
@@ -349,12 +346,12 @@ const slider = reactive({
 
     // 必须确保在触发 picking 或 picked 事件时，time 不能是 undefined
     // 若有 clean 操作，那么应当是一个额外的事件
-    onPicking(time: Date | undefined) {
-        slider.dispatch('picking', time)
+    onPicking(time: Date | undefined, event: MouseEvent) {
+        slider.dispatch('picking', time, event)
     },
 
-    onPicked(time: Date | undefined) {
-        slider.dispatch('picked', time)
+    onPicked(time: Date | undefined, event: MouseEvent) {
+        slider.dispatch('picked', time, event)
     },
 
     onListMouseMove(event: MouseEvent) {
@@ -365,7 +362,7 @@ const slider = reactive({
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
         const time = slider.getTimeByMouseEvent(event)
-        slider.hintTime = clampTime(time, undefined, 'near')
+        slider.hintTime = clampTime(time, undefined, 'near', true)
     },
 
     onListMouseLeave() {
@@ -388,15 +385,15 @@ const slider = reactive({
         }
 
         slider.updateItemSize(event.currentTarget as Element)
-        slider.onPicking(slider.getTimeByMouseEvent(event))
+        slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseMove(event: MouseEvent) {
-        slider.onPicking(slider.getTimeByMouseEvent(event))
+        slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseUp(event: MouseEvent) {
-        slider.onPicked(slider.getTimeByMouseEvent(event))
+        slider.onPicked(slider.getTimeByMouseEvent(event), event)
     },
 
     activate() {
@@ -432,9 +429,9 @@ const slider = reactive({
         slider.itemHeight = itemRect.height
     },
 
-    dispatch(action: SliderAction, time: Date | undefined) {
+    dispatch(action: SliderAction, time: Date | undefined, event: MouseEvent) {
         slider.state =
-            slider.ACTION_HANDLERS[slider.state as SliderState][action](time) ?? slider.state
+            slider.ACTION_HANDLERS[slider.state as SliderState][action](time, event) ?? slider.state
     },
 })
 
@@ -485,16 +482,21 @@ function clampTime(
     time: Date | undefined,
     reference: Date | undefined,
     roundMode: 'floor' | 'near',
+    snap: boolean,
 ) {
     if (!isValidTime(time)) {
         return undefined
     }
 
-    let start: Date = min
-    let end: Date = max
+    if (snap) {
+        time = snapTime(time)
+    }
 
     time = roundTime(time, roundMode)
     reference = step.floor(reference)
+
+    let start: Date = min
+    let end: Date = max
 
     if (reference && limit) {
         start = maxDate([start, subMilliseconds(step.next(reference), limit)])
@@ -521,6 +523,16 @@ function roundTime(time: Date, mode: 'floor' | 'near') {
             return new Date((tv - sv) / len < th || !isSameDay(tv, nv) ? sv : nv)
         }
     }
+}
+
+/** 以 5 分钟为单位，将时间就近取整 */
+function snapTime(time: Date) {
+    const th = 0.5
+    const len = 1000 * 60 * 15
+    const tv = time.valueOf()
+    const sv = tv - (tv % len)
+    const nv = sv + len
+    return new Date((tv - sv) / len < th ? sv : isSameDay(tv, nv) ? nv : nv - 1)
 }
 
 function dayPositionToTime(startTimeOfDay: Date, position: number): Date {
