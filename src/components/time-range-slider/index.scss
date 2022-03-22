@@ -31,8 +31,9 @@ $b: time-range-slider;
     &__sliders {
         &__container {
             border: 1px solid #000;
-            height: 690px;
+            height: 300px;
             overflow: auto;
+            scroll-behavior: smooth;
         }
     }
 

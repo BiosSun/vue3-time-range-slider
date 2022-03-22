@@ -28,6 +28,7 @@
         <div
             v-if="activatedRange.start"
             class="time-range-slider__slider-bar__point"
+            :data-point="activatedRange.start.flag"
             :style="{
                 '--position': activatedRange.start.position,
             }"
@@ -36,6 +37,7 @@
         <div
             v-if="activatedRange.end"
             class="time-range-slider__slider-bar__point"
+            :data-point="activatedRange.end.flag"
             :style="{
                 '--position': activatedRange.end.position,
             }"
@@ -87,8 +89,8 @@ const activatedRange: { track?: Track; start?: Thumb; end?: Thumb } = $computed(
     const startTime = step.floor(getStartPoint(timeRange))
     const endTime = step.ceil(getEndPoint(timeRange))
 
-    const startThumb = buildThumb(startTime)
-    const endThumb = buildThumb(endTime)
+    const startThumb = buildThumb('start', startTime)
+    const endThumb = buildThumb('end', endTime)
 
     const track = buildTrack(startTime, endTime)
 
@@ -123,6 +125,7 @@ interface Track {
 }
 
 interface Thumb {
+    flag: string
     position: number
 }
 
@@ -149,7 +152,7 @@ function buildTrack(start: Date | undefined, end: Date | undefined): Track | und
     }
 }
 
-function buildThumb(time: Date | undefined): Thumb | undefined {
+function buildThumb(flag: string, time: Date | undefined): Thumb | undefined {
     // 无效的时间
     if (!isValidTime(time)) {
         return undefined
@@ -163,6 +166,7 @@ function buildThumb(time: Date | undefined): Thumb | undefined {
     const position = timeToPosition(time)
 
     return {
+        flag,
         position,
     }
 }

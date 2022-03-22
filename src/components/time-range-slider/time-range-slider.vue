@@ -59,7 +59,8 @@ import {
     addMilliseconds,
     isSameDay,
 } from 'date-fns'
-import { computed, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, watch } from 'vue'
+import scrollIntoView from 'scroll-into-view-if-needed'
 import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
 import {
@@ -77,8 +78,9 @@ import {
     D_MS,
     STEP_INFOS,
     detectLeftButton,
+    diffRange,
+    checkMovedPoint,
 } from './util'
-import { $computed } from 'vue/macros'
 
 // API
 // -----------------------------------------------------------------------------
@@ -214,9 +216,14 @@ const slider = reactive({
     state: 'WAIT' as SliderState,
     range: [undefined, undefined] as Range,
     hintTime: undefined as Date | undefined,
+
+    /** 表示用户当前正在与 sliders 面板进行交互 */
     activated: false,
+
     itemWidth: 0,
     itemHeight: 0,
+
+    scrollActionId: 0,
 
     get left(): Date | undefined {
         return slider.range[0]
@@ -303,11 +310,8 @@ const slider = reactive({
             // 用户松开鼠标：
             picked() {
                 emitEndPicking(slider.range)
-                slider.syncToInput()
                 emitChange(slider.range as Range) // WAIT
-                slider.setRange(undefined)
                 slider.inactivate()
-
                 return 'WAIT'
             },
         },
@@ -325,7 +329,14 @@ const slider = reactive({
             return false
         }
 
-        slider.range = [...range]
+        const originalRange = slider.range
+        const newRange = [...range]
+
+        slider.range = newRange
+
+        if (!slider.activated) {
+            slider.scrollIntoChangedPointIfNeeded(originalRange, newRange)
+        }
 
         return true
     },
@@ -403,9 +414,17 @@ const slider = reactive({
     },
 
     inactivate() {
-        slider.activated = false
         document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
         document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
+
+        // NOTE
+        // 这里使用 nextTick 的原因是，inactivate 时通常会触发 update:modelValue 事件，
+        // 若用户在这个过程中调整了 modelValue，那么会导致组件内接收到的值与 slider.range 不一致，
+        // 进而这会触发 slider 的自动滚动，但我们可能并不想这样做，因此通过延迟关闭 activated
+        // 状态来避免这种情况的出现。
+        nextTick(() => {
+            slider.activated = false
+        })
     },
 
     getTimeByMouseEvent({ clientX, clientY }: MouseEvent) {
@@ -427,6 +446,36 @@ const slider = reactive({
 
         slider.itemWidth = itemRect.width
         slider.itemHeight = itemRect.height
+    },
+
+    async scrollIntoChangedPointIfNeeded(originalRange: Range, newRange: Range) {
+        let actionId = ++slider.scrollActionId
+
+        await nextTick()
+
+        if (slider.scrollActionId !== actionId) {
+            return
+        }
+
+        const movedPoint = checkMovedPoint(originalRange, newRange)
+
+        if (!movedPoint) {
+            return
+        }
+
+        const pointEl = sliderContainer?.querySelector(`[data-point=${movedPoint}]`)
+
+        if (!pointEl) {
+            return
+        }
+
+        // scroll
+        scrollIntoView(pointEl, {
+            scrollMode: 'if-needed',
+            block: 'nearest',
+            inline: 'nearest',
+            behavior: 'auto',
+        })
     },
 
     dispatch(action: SliderAction, time: Date | undefined, event: MouseEvent) {

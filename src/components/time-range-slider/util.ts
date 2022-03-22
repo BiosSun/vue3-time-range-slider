@@ -50,6 +50,10 @@ export function isSameDay(t1: Date | undefined, t2: Date | undefined): boolean {
     return (t1 == null && t2 == null) || _isSameDay(t1!, t2!)
 }
 
+export function isLateTime(t1: Date | undefined, t2: Date | undefined): boolean {
+    return !!(t1 && t2 && t1.valueOf() > t2.valueOf())
+}
+
 export function mergeDateAndTime(date: Date | undefined, time: Date | undefined) {
     try {
         const dateTime = addMilliseconds(startOfDay(date!), millisecondsOfDayStart(time!))
@@ -184,6 +188,48 @@ export function isFullRange(range: any): range is Date[] {
 
 export function isEmptyRange(range: Range | undefined): boolean {
     return range == null || (range[0] == null && range[1] == null)
+}
+
+export function isSameRange(r1: Range | undefined, r2: Range | undefined): boolean {
+    const nr1 = normalizeRange(r1)
+    const nr2 = normalizeRange(r2)
+    return isSameTime(nr1[0], nr2[0]) && isSameTime(nr1[1], nr2[1])
+}
+
+export function diffRange(
+    r1: Range | undefined,
+    r2: Range | undefined,
+): { start: boolean; end: boolean } {
+    const nr1 = normalizeRange(r1)
+    const nr2 = normalizeRange(r2)
+
+    return {
+        start: isSameTime(nr1[0], nr2[0]),
+        end: isSameTime(nr1[1], nr2[1]),
+    }
+}
+
+export function checkMovedPoint(r1: Range, r2: Range): 'start' | 'end' | undefined {
+    let [r1l, r1r] = r1
+    let [r2l, r2r] = r2
+
+    if (isSameTime(r1l, r2r) || isSameTime(r1r, r2l)) {
+        ;[r2r, r2l] = [r2l, r2r]
+    }
+
+    if (isSameTime(r1l, r2l)) {
+        if (isSameTime(r1r, r2r)) {
+            return undefined
+        }
+
+        return isLateTime(r2r, r2l) ? 'end' : 'start'
+    } else {
+        if (!isSameTime(r1r, r2r)) {
+            return 'end'
+        }
+
+        return isLateTime(r2l, r2r) ? 'end' : 'start'
+    }
 }
 
 export function normalizeRange(range: Range | undefined): Range {
