@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { addHours, parse, isValid } from 'date-fns'
+import { addHours } from 'date-fns'
 import TimeRangeSlider from './components/time-range-slider'
 import { SliderStep } from './components/time-range-slider/util'
+import DateTimeInput from './date-time-input.vue'
 
 let step: SliderStep = $ref('second')
-const sliderMinStr: string = $ref('2022-01-01 15:09:12.192')
-const sliderMaxStr: string = $ref('2022-01-17 12:38:43.894')
-let prevValidSliderMin = { value: undefined as any as Date }
-let prevValidSliderMax = { value: undefined as any as Date }
-const sliderMin: Date = $computed(() => parseDateTime(sliderMinStr, prevValidSliderMin)!)
-const sliderMax: Date = $computed(() => parseDateTime(sliderMaxStr, prevValidSliderMax)!)
+const sliderMin: Date = $ref(new Date(2022, 0, 1, 15, 9, 12, 192))
+const sliderMax: Date = $ref(new Date(2022, 0, 17, 12, 38, 43, 894))
 let limitEnable = $ref(true)
 let limit = 1000 * 60 * 60 * 24 * 7
-let timeRange: Date[] | undefined = $ref([
+let timeRange: (Date | undefined)[] = $ref([
     new Date(2022, 0, 5, 23, 45, 20, 111),
     new Date(2022, 0, 2, 0, 20, 51, 555),
 ])
@@ -32,13 +29,11 @@ function onTimeRangeChange(range: any) {
     timeRange = range
 }
 
-let dateTimeInputValue: Date | null = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
+let dateTimeInputValue: Date | undefined = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
 
 const inputStep: SliderStep = $ref('second')
-const inputMinStr: string = $ref('2022-01-02 12:09:12.938')
-const inputMaxStr: string = $ref('2022-01-06 15:38:43.189')
-const inputMin: Date | undefined = $computed(() => parseDateTime(inputMinStr))
-const inputMax: Date | undefined = $computed(() => parseDateTime(inputMaxStr))
+const inputMin: Date | undefined = $ref(new Date(2022, 0, 2, 12, 9, 12, 938))
+const inputMax: Date | undefined = $ref(new Date(2022, 0, 6, 15, 38, 43, 189))
 
 function onInputFocus() {
     console.info('input focus')
@@ -48,30 +43,15 @@ function onInputBlur() {
     console.info('input blur')
 }
 
-function parseDateTime(str: string, prev?: { value: Date }) {
-    try {
-        const value = parse(str, 'yyyy-MM-dd HH:mm:ss.SSS', 0)
-        if (!isValid(value)) {
-            throw new Error('invalid')
-        }
-
-        if (prev) {
-            prev.value = value
-        }
-
-        return value
-    } catch {
-        return prev?.value ?? undefined
-    }
-}
-
 const sliderStep: SliderStep = $ref('second')
 </script>
 
 <template>
     <h1>TimeRangeSlider</h1>
 
-    <button @click="timeRange = undefined">clean</button>
+    <DateTimeInput label="start" v-model="timeRange[0]" />&nbsp;
+    <DateTimeInput label="end" v-model="timeRange[1]" /><br />
+    <button @click="timeRange = [undefined, undefined]">clean all</button>&nbsp;
     {{ { modelValue: timeRange } }}
 
     <br />
@@ -82,8 +62,8 @@ const sliderStep: SliderStep = $ref('second')
 
     <br />
 
-    <label>min: <input v-model="sliderMinStr" style="width: 200px" /></label>&nbsp;
-    <label>max: <input v-model="sliderMaxStr" style="width: 200px" /></label>
+    <DateTimeInput label="min" v-model="sliderMin" />&nbsp;
+    <DateTimeInput label="min" v-model="sliderMax" />
 
     <br />
 
@@ -115,13 +95,13 @@ const sliderStep: SliderStep = $ref('second')
 
     <br />
 
-    <button @click="dateTimeInputValue = null">clean</button>
+    <DateTimeInput label="start" v-model="dateTimeInputValue" />&nbsp;
     {{ { modelValue: dateTimeInputValue } }}
 
     <br />
 
-    <label>min: <input v-model="inputMinStr" style="width: 200px" /></label>&nbsp;
-    <label>max: <input v-model="inputMaxStr" style="width: 200px" /></label>
+    <DateTimeInput label="min" v-model="inputMin" />&nbsp;
+    <DateTimeInput label="min" v-model="inputMax" />
 
     <br />
 
