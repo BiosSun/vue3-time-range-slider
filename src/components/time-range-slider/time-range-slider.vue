@@ -73,13 +73,14 @@ import {
     clampTime as _clampTime,
     clamp,
     assert,
-    isSameTime,
     SliderStep,
     D_MS,
     STEP_INFOS,
     detectLeftButton,
-    diffRange,
     checkMovedPoint,
+    normalizeRange,
+    isSameRange,
+    ensureSameDirection,
 } from './util'
 
 // API
@@ -193,14 +194,9 @@ const inputWarned = $computed(() => {
 
 const inputFocused = $computed(() => leftInput.focused || rightInput.focused)
 
-function resetInputValue(range: Range, force: boolean) {
-    if (force || !isSameTime(range[0], leftInput.outputValue)) {
-        leftInput.value = leftInput.outputValue = range[0]
-    }
-
-    if (force || !isSameTime(range[1], rightInput.outputValue)) {
-        rightInput.value = rightInput.outputValue = range[1]
-    }
+function resetInputValue(range: Range) {
+    leftInput.value = leftInput.outputValue = range[0]
+    rightInput.value = rightInput.outputValue = range[1]
 }
 
 // Slider State
@@ -243,11 +239,11 @@ const slider = reactive({
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
                 ) {
+                    slider.activate()
+                    slider.syncToInput()
+                    slider.hintTime = clampedTime
                     emitStartPicking(slider.range)
                     emitPicking(slider.range)
-                    slider.syncToInput()
-                    slider.activate()
-                    slider.hintTime = clampedTime
                     return 'LEFT_PICKING'
                 }
             },
@@ -265,9 +261,9 @@ const slider = reactive({
                     slider.setRangePoint('left', clampedTime) &&
                     slider.setRangePoint('right', clampedTime)
                 ) {
-                    emitPicking(slider.range)
                     slider.syncToInput()
                     slider.hintTime = clampedTime
+                    emitPicking(slider.range)
                 }
             },
 
@@ -284,9 +280,9 @@ const slider = reactive({
             picking(time: Date | undefined) {
                 const clampedTime = clampTime(time, slider.left!, 'near', true)
                 if (slider.setRangePoint('right', clampedTime)) {
-                    emitPicking(slider.range)
                     slider.syncToInput()
                     slider.hintTime = clampedTime
+                    emitPicking(slider.range)
                     return 'RIGHT_PICKING'
                 }
             },
@@ -301,9 +297,9 @@ const slider = reactive({
             picking(time: Date | undefined, event: MouseEvent) {
                 const clampedTime = clampTime(time, slider.left!, 'near', !detectLeftButton(event))
                 if (slider.setRangePoint('right', clampedTime)) {
-                    emitPicking(slider.range)
                     slider.syncToInput()
                     slider.hintTime = clampedTime
+                    emitPicking(slider.range)
                 }
             },
 
@@ -324,7 +320,7 @@ const slider = reactive({
         }
     },
 
-    setRange(range: Range | undefined = [undefined, undefined]) {
+    setRange(range: Range) {
         if (!isValidRange(range)) {
             return false
         }
@@ -352,7 +348,7 @@ const slider = reactive({
     },
 
     syncToInput() {
-        resetInputValue(slider.range, true)
+        resetInputValue(slider.range)
     },
 
     // 必须确保在触发 picking 或 picked 事件时，time 不能是 undefined
@@ -418,7 +414,7 @@ const slider = reactive({
         document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
 
         // NOTE
-        // 这里使用 nextTick 的原因是，inactivate 时通常会触发 update:modelValue 事件，
+        // 这里使用 nextTick 的原因是，当 slider 面板切换到 inactivate 状态时通常会触发 update:modelValue 事件，
         // 若用户在这个过程中调整了 modelValue，那么会导致组件内接收到的值与 slider.range 不一致，
         // 进而这会触发 slider 的自动滚动，但我们可能并不想这样做，因此通过延迟关闭 activated
         // 状态来避免这种情况的出现。
@@ -487,25 +483,42 @@ const slider = reactive({
 // 与外部进行状态同步
 // -----------------------------------------------------------------------------
 
+// NOTE: 若是由于用户在组件内选取或输入时间而导致的 modelValue 改变，那么 sliderActivated 和 inputFocused 状态
+//       的改变都是在 modelValue 之后的，这一点确保了 slider 和 input 不会因为 watch 重复触发而被强制设置值。
+//       （若这一点无法保证，那么 sliderActivated 或 inputFocused 状态改变时会触发一次 watch，此时由于 modelValue
+//         没有改变，slider 和 input 中的时间区间肯定不会和 modelValue 一样，所以它们会被强行设置为 modelValue，
+//         紧接着 modelValue 改变又一次触发 watch，slider 和 input 会再被设置为新的 modelValue 的值）
 watch(
-    [$$(modelValue), computed(() => slider.state)],
-    ([modelValue, state]) => {
-        if (state === 'WAIT') {
-            slider.setRange(modelValue)
+    [$$(modelValue), computed(() => slider.activated), inputFocused],
+    ([modelValue, sliderActivated, inputFocused]) => {
+        // 当用户正在 slider 面板中选取时间时，不响应外部的状态改变
+        if (sliderActivated) {
+            return
         }
+
+        // 当用户正在时间输入框中输入值时，不响应外部的状态改变
+        if (inputFocused) {
+            return
+        }
+
+        modelValueToSlideRange()
+        modelValueToInputRange()
     },
     { immediate: true, deep: true },
 )
 
-watch(
-    [$$(modelValue), $$(inputFocused)],
-    ([modelValue, focused]) => {
-        if (!focused) {
-            resetInputValue(modelValue, false)
-        }
-    },
-    { immediate: true, deep: true },
-)
+function modelValueToSlideRange() {
+    if (!isSameRange(modelValue, slider.range)) {
+        slider.setRange(ensureSameDirection(modelValue, slider.range))
+    }
+}
+
+function modelValueToInputRange() {
+    const inputRange = [leftInput.outputValue, rightInput.outputValue] as Range
+    if (!isSameRange(modelValue, inputRange)) {
+        resetInputValue(ensureSameDirection(modelValue, inputRange))
+    }
+}
 
 function emitStartPicking(range: Range) {
     emit('startPicking', range)
@@ -521,7 +534,7 @@ function emitEndPicking(range: Range) {
 
 function emitChange(range: Range) {
     emit('update:modelValue', range)
-    emit('change', range)
+    emit('change', normalizeRange(range))
 }
 
 // Tools

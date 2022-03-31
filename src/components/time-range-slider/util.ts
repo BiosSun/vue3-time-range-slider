@@ -186,20 +186,17 @@ export function isFullRange(range: any): range is Date[] {
     return isValidRange(range) && isValidTime(range[0]) && isValidTime(range[1])
 }
 
-export function isEmptyRange(range: Range | undefined): boolean {
+export function isEmptyRange(range: Range): boolean {
     return range == null || (range[0] == null && range[1] == null)
 }
 
-export function isSameRange(r1: Range | undefined, r2: Range | undefined): boolean {
+export function isSameRange(r1: Range, r2: Range): boolean {
     const nr1 = normalizeRange(r1)
     const nr2 = normalizeRange(r2)
     return isSameTime(nr1[0], nr2[0]) && isSameTime(nr1[1], nr2[1])
 }
 
-export function diffRange(
-    r1: Range | undefined,
-    r2: Range | undefined,
-): { start: boolean; end: boolean } {
+export function diffRange(r1: Range, r2: Range): { start: boolean; end: boolean } {
     const nr1 = normalizeRange(r1)
     const nr2 = normalizeRange(r2)
 
@@ -232,11 +229,13 @@ export function checkMovedPoint(r1: Range, r2: Range): 'start' | 'end' | undefin
     }
 }
 
-export function normalizeRange(range: Range | undefined): Range {
-    if (!range) {
-        return [undefined, undefined]
-    }
-
+/**
+ * 确保所返回的时间区间中：
+ * 1. 如果有两个时间点，则左时间点一定小于或等于右时间点；
+ * 2. 如果只有一个时间点，则一定是左时间点，而右时间点为 undefined；
+ * 3. 所有时间点一定是有效时间。
+ */
+export function normalizeRange(range: Range): Range {
     const [start, end] = range
 
     if (isValidTime(start)) {
@@ -256,6 +255,25 @@ export function normalizeRange(range: Range | undefined): Range {
     }
 
     return [undefined, undefined]
+}
+
+/**
+ * 确保 r1 的方向与 r2 保持一致。
+ * 即确保若 r2 的左时间为起始时间点，则 r1 的左时间也为起始时间点，若 r2 的左时间为结束时间点，则 r1 也一样。
+ * 若 r1 的方向与 r2 一样，若 r2 为 undefined，则直接返回 r1 的原值。
+ */
+export function ensureSameDirection(r1: Range, r2: Range): Range {
+    // 检查时间区间中的左时间是否是起始时间点
+    function isLeftStart(range: Range): boolean {
+        return !!(!range[1] || (range[0] && range[0] <= range[1]))
+    }
+
+    if (!isValidRange(r1) || !isValidRange(r2)) {
+        return r1
+    }
+
+    const isSameDirection = isLeftStart(r1) === isLeftStart(r2)
+    return isSameDirection ? r1 : [r1[1], r1[0]]
 }
 
 export function getStartPoint(range: Range | undefined): Date | undefined {
