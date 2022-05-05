@@ -35,7 +35,13 @@ import { watch } from 'vue'
 import useIsFocused from './use-is-focused'
 import { clampTime, isSameTime, mergeDateAndTime, SliderStep, STEP_INFOS } from './util'
 
-const { modelValue, min, max, warned, step: stepKey } = defineProps<{
+const {
+    modelValue,
+    min,
+    max,
+    warned,
+    step: stepKey,
+} = defineProps<{
     modelValue?: Date
     min?: Date
     max?: Date
