@@ -17,11 +17,18 @@ $b: time-range-slider;
             }
 
             &:invalid,
-            &--invalid,
-            &--warned & {
-                border-color: #d48806;
-                background: #fffbe6;
+            &--invalid {
+                @extend %invalid-input;
             }
+        }
+
+        &--warned &__input {
+            @extend %invalid-input;
+        }
+
+        @at-root %invalid-input {
+            border-color: #d48806;
+            background: #fffbe6;
         }
 
         &__date-input {

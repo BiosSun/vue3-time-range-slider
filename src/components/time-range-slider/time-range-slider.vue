@@ -50,7 +50,6 @@
 </template>
 <script lang="ts" setup>
 import {
-    differenceInMilliseconds,
     eachDayOfInterval,
     endOfDay,
     min as minDate,
@@ -81,6 +80,7 @@ import {
     normalizeRange,
     isSameRange,
     ensureSameDirection,
+    getRangeDuration,
 } from './util'
 
 // API
@@ -187,9 +187,16 @@ const rightInput = reactive({
 })
 
 const inputWarned = $computed(() => {
-    return limit && leftInput.value && rightInput.value
-        ? differenceInMilliseconds(leftInput.value, rightInput.value) > limit
-        : false
+    if (!limit) {
+        return false
+    }
+
+    if (!leftInput.value || !rightInput.value) {
+        return false
+    }
+
+    const duration = getRangeDuration([leftInput.value, rightInput.value], step)
+    return duration > limit
 })
 
 const inputFocused = $computed(() => leftInput.focused || rightInput.focused)

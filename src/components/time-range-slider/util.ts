@@ -114,18 +114,18 @@ export function clampTime(time: Date, a: Date | undefined, b: Date | number | un
 
 export type SliderStep = 'second' | 'minute' | 'hour'
 
-export const STEP_INFOS: {
-    [key in SliderStep]: {
-        key: SliderStep
-        s: number
-        ms: number
-        tf: string // time's format template
-        floor: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
-        ceil: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
-        prev: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
-        next: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
-    }
-} = {
+interface StepInfo {
+    key: SliderStep
+    s: number
+    ms: number
+    tf: string // time's format template
+    floor: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+    ceil: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+    prev: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+    next: <V extends Date | undefined>(time: V) => V extends Date ? Date : undefined
+}
+
+export const STEP_INFOS: { [key in SliderStep]: StepInfo } = {
     second: markRaw({
         key: 'second',
         s: 1,
@@ -309,6 +309,22 @@ export function rangeToInterval(range: Range): Interval | undefined {
         start: getStartPoint(range)!,
         end: getEndPoint(range)!,
     }
+}
+
+export function getRangeDuration(range: Range, step: StepInfo): number {
+    assert(isFullRange(range), 'must full range to get duration')
+
+    let p1 = range[0]
+    let p2 = range[1]
+
+    if (p1 > p2) {
+        ;[p1, p2] = [p2, p1]
+    }
+
+    p1 = step.floor(p1)
+    p2 = step.floor(step.next(p2))
+
+    return p2.valueOf() - p1.valueOf()
 }
 
 // Other
