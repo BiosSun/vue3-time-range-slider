@@ -95,7 +95,7 @@ const sliderStep: SliderStep = $ref('second')
 
     <br />
 
-    <DateTimeInput label="start" v-model="dateTimeInputValue" />&nbsp;
+    <DateTimeInput label="time" v-model="dateTimeInputValue" />&nbsp;
     {{ { modelValue: dateTimeInputValue } }}
 
     <br />
