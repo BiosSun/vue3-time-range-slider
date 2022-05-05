@@ -17,6 +17,7 @@ $b: time-range-slider;
             }
 
             &:invalid,
+            &--invalid,
             &--warned & {
                 border-color: #d48806;
                 background: #fffbe6;

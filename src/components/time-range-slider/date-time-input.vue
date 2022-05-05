@@ -8,8 +8,8 @@
             ref="dateInput"
             type="date"
             :value="inputDateString"
-            :min="minDateAndMaxDateStrings[0]"
-            :max="minDateAndMaxDateStrings[1]"
+            :min="minDateString"
+            :max="maxDateString"
             @change="onDateChange"
             @focus="onFocus"
             @blur="onBlur"
@@ -17,12 +17,11 @@
         <input
             :key="step.s"
             class="time-range-slider__date-time-input__input time-range-slider__date-time-input__time-input"
+            :class="{ 'time-range-slider__date-time-input__input--invalid': invalidTime }"
             ref="timeInput"
             type="time"
             :step="step.s"
             :value="inputTimeString"
-            :min="minTimeAndMaxTimeStrings[0]"
-            :max="minTimeAndMaxTimeStrings[1]"
             @change="onTimeChange"
             @focus="onFocus"
             @blur="onBlur"
@@ -43,8 +42,9 @@ const {
     step: stepKey,
 } = defineProps<{
     modelValue?: Date
-    min?: Date
-    max?: Date
+    // 这里的 min 和 max 是已经根据 step 进行 floor 处理后的
+    min: Date
+    max: Date
     warned?: boolean
     step: SliderStep
 }>()
@@ -82,15 +82,16 @@ let inputTimeString: string | undefined = $ref(formatTime(inputDateTime))
 
 let outputDateTime: Date | undefined = $ref(modelValue)
 
-const minDateAndMaxDateStrings: (string | undefined)[] = $computed(() => [
-    formatDate(min),
-    formatDate(max),
-])
+const minDateString = $computed(() => formatDate(min))
+const maxDateString = $computed(() => formatDate(max))
 
-const minTimeAndMaxTimeStrings: (string | undefined)[] = $computed(() => {
-    const minTimeString = isSameDay(inputDateTime!, min!) ? formatTime(min) : undefined
-    const maxTimeString = isSameDay(inputDateTime!, max!) ? formatTime(max) : undefined
-    return [minTimeString, maxTimeString]
+const invalidTime: boolean = $computed(() => {
+    if (!inputDateTime) {
+        return false
+    }
+
+    const time = step.floor(inputDateTime).valueOf()
+    return time < min.valueOf() || time > max.valueOf()
 })
 
 watch([$$(modelValue), $$(isFocused)], ([modelValue, isFocused]) => {
