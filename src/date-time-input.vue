@@ -1,13 +1,13 @@
 <template>
     <label>
         {{ label }}:
-        <input type="datetime-local" :value="datetimeStr" @change="onInputChange" step="1" />
+        <input type="datetime-local" style="height: 22px" :value="datetimeStr" @change="onInputChange" step="1" />
         <button @click="onChange(undefined)">x</button>
     </label>
 </template>
 <script lang="ts" setup>
 import { toRef, watch } from 'vue'
-import { format, parse, isValid, isSameDay } from 'date-fns'
+import { format, parse, isValid } from 'date-fns'
 
 const DATE_TIME_TEMPLATE = "yyyy-MM-dd'T'HH:mm:ss.SSS"
 
@@ -60,12 +60,21 @@ function formatDateTime(date: Date | undefined) {
 }
 
 function parseDateTime(str: string | undefined) {
-    try {
-        const datetime = parse(str!, DATE_TIME_TEMPLATE, 0)
-        return isValid(datetime) ? datetime : undefined
-    } catch(e) {
-        console.error(e)
-        return undefined
+    const templates = [DATE_TIME_TEMPLATE, "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm"]
+
+    for (const template of templates) {
+        try {
+            const datetime = parse(str!, template, 0)
+            console.info(str, template, datetime)
+
+            if (isValid(datetime)) {
+                return datetime
+            }
+        } catch (e) {
+            console.error(e)
+        }
     }
+
+    return undefined
 }
 </script>
