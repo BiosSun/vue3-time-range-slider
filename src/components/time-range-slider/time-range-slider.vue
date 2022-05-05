@@ -66,6 +66,7 @@ import {
     Range,
     isValidTime,
     isValidRange,
+    isEmptyRange,
     isFullRange,
     getLeftPoint,
     getRightPoint,
@@ -460,7 +461,16 @@ const slider = reactive({
             return
         }
 
-        const movedPoint = checkMovedPoint(originalRange, newRange)
+        let movedPoint: 'start' | 'end' | undefined
+        let behavior: 'none' | 'auto'
+
+        if (isEmptyRange(originalRange) && isFullRange(newRange)) {
+            movedPoint = 'start'
+            behavior = 'none'
+        } else {
+            movedPoint = checkMovedPoint(originalRange, newRange)
+            behavior = 'auto'
+        }
 
         if (!movedPoint) {
             return
@@ -473,11 +483,18 @@ const slider = reactive({
         }
 
         // scroll
+        if (behavior == 'none') {
+            sliderContainer!.style.setProperty('scroll-behavior', 'auto')
+
+            nextTick(() => {
+                sliderContainer!.style.removeProperty('scroll-behavior')
+            })
+        }
+
         scrollIntoView(pointEl, {
             scrollMode: 'if-needed',
             block: 'nearest',
             inline: 'nearest',
-            behavior: 'auto',
         })
     },
 
