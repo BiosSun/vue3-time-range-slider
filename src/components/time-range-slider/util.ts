@@ -68,7 +68,7 @@ function millisecondsOfDayStart(time: Date) {
 }
 
 /**
- * 确保一个时间值被限制在所指定的邻域区间内
+ * 确保一个时间值被限制在所指定的起止区间或邻域区间内
  * NOTE: 这里的邻域是闭区间
  */
 export function clampTime(time: Date, start: Date | undefined, end: Date | undefined): Date
