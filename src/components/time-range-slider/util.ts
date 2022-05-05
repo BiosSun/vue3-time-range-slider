@@ -268,7 +268,12 @@ export function ensureSameDirection(r1: Range, r2: Range): Range {
         return !!(!range[1] || (range[0] && range[0] <= range[1]))
     }
 
-    if (!isValidRange(r1) || !isValidRange(r2)) {
+    if (
+        !isValidRange(r1) ||
+        !isValidRange(r2) ||
+        isSameTime(r1[0], r1[1]) ||
+        isSameTime(r2[0], r2[1])
+    ) {
         return r1
     }
 
