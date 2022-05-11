@@ -114,7 +114,7 @@ export function clampTime(time: Date, a: Date | undefined, b: Date | number | un
 
 export type SliderStep = 'second' | 'minute' | 'hour'
 
-interface StepInfo {
+export interface StepInfo {
     key: SliderStep
     s: number
     ms: number
@@ -351,6 +351,10 @@ export function intersection(r1: Interval, r2: Interval): Interval | undefined {
 
 export function clamp(val: number, min: number, max: number): number {
     return Math.min(Math.max(min, val), max)
+}
+
+export function clampIndex(val: number, len: number): number {
+    return clamp(Math.floor(val), 0, len - 1)
 }
 
 export function assert(condition: unknown, message?: string): asserts condition {
