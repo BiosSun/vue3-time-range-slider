@@ -1,10 +1,10 @@
 <template>
     <div
-        class="time-range-slider__date-time-input"
-        :class="{ 'time-range-slider__date-time-input--warned': warned }"
+        class="time-range-slider__inputs"
+        :class="{ 'time-range-slider__inputs--warned': warned }"
     >
         <input
-            class="time-range-slider__date-time-input__input time-range-slider__date-time-input__date-input"
+            class="time-range-slider__input time-range-slider__date-input"
             ref="dateInput"
             type="date"
             :value="inputDateString"
@@ -16,8 +16,8 @@
         />
         <input
             :key="step.s"
-            class="time-range-slider__date-time-input__input time-range-slider__date-time-input__time-input"
-            :class="{ 'time-range-slider__date-time-input__input--invalid': invalidTime }"
+            class="time-range-slider__input time-range-slider__time-input"
+            :class="{ 'time-range-slider__input--invalid': invalidTime }"
             ref="timeInput"
             type="time"
             :step="step.s"

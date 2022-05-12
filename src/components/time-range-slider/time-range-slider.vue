@@ -28,11 +28,7 @@
             </div>
         </div>
         <div class="time-range-slider__sliders__container" ref="sliderContainer">
-            <div
-                class="time-range-slider__sliders__list"
-                @mousemove="slider.onListMouseMove"
-                @mouseleave="slider.onListMouseLeave"
-            >
+            <div @mousemove="slider.onListMouseMove" @mouseleave="slider.onListMouseLeave">
                 <SliderBar
                     v-for="date of slider.dates"
                     :key="date.valueOf()"

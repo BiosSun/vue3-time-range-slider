@@ -1,60 +1,115 @@
 $b: time-range-slider;
 
 .#{$b} {
-    &__date-time-input {
+    // 输入框
+    // --------------------
+
+    @at-root %invalid-input {
+        border-color: #d48806;
+        background: #fffbe6;
+    }
+
+    &__inputs {
         display: flex;
         gap: 8px;
+    }
 
-        &__input {
-            box-sizing: border-box;
-            border: 1px solid #767676;
-            border-radius: 2px;
-            height: 24px;
-            padding: 0 0 0 2px;
+    &__input {
+        box-sizing: border-box;
+        border: 1px solid #767676;
+        border-radius: 2px;
+        height: 24px;
+        padding: 0 0 0 2px;
 
-            &::-webkit-calendar-picker-indicator {
-                margin-inline-start: 0;
-            }
-
-            &:invalid,
-            &--invalid {
-                @extend %invalid-input;
-            }
+        &::-webkit-calendar-picker-indicator {
+            margin-inline-start: 0;
         }
 
-        &--warned &__input {
+        &:invalid,
+        &--invalid {
             @extend %invalid-input;
         }
+    }
 
-        @at-root %invalid-input {
-            border-color: #d48806;
-            background: #fffbe6;
+    &__inputs--warned &__input {
+        @extend %invalid-input;
+    }
+
+    &__date-input {
+        width: 120px;
+    }
+
+    &__time-input {
+        width: 100px;
+    }
+
+    // 时间刻度
+    // --------------------
+
+    &__ruler {
+        height: 13px;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-evenly;
+
+        font-size: 12px;
+        line-height: 12px;
+
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: 'tnum';
+
+        user-select: none;
+        pointer-events: none;
+
+        > {
+            flex: 0 0 1px;
+            max-width: 1px;
+            min-width: 1px;
         }
 
-        &__date-input {
-            width: 120px;
+        &__scale {
+            position: relative;
+
+            &:before {
+                content: '';
+
+                position: absolute;
+                top: 9px;
+                bottom: 0;
+                left: 0;
+                right: 0;
+
+                width: 1px;
+
+                background: currentColor;
+            }
+
+            &:empty {
+                &:before {
+                    top: 10px;
+                    opacity: 0.5;
+                }
+            }
         }
 
-        &__time-input {
-            width: 100px;
+        &__label {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%) scale(0.7);
+            transform-origin: top center;
         }
     }
 
-    &__sliders {
-        &__container {
-            border: 1px solid #000;
-            height: 300px;
-            overflow: auto;
-            scroll-behavior: smooth;
-        }
-    }
+    // Day Slider
+    // --------------------
 
-    &__slider-bar {
+    &__slider {
         position: relative;
-        height: var(--time-range-slider__slider-bar--height, 34px);
+        height: var(--time-range-slider__slider--height, 34px);
         border-bottom: 1px solid #000;
 
-        > .#{$b}__time-ruler {
+        > .#{$b}__ruler {
             position: absolute;
             left: 0;
             right: 0;
@@ -101,58 +156,15 @@ $b: time-range-slider;
         }
     }
 
-    &__time-ruler {
-        height: 13px;
-        display: flex;
-        align-items: stretch;
-        justify-content: space-evenly;
+    // Sliders
+    // --------------------
 
-        font-size: 12px;
-        line-height: 12px;
-
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: 'tnum';
-
-        user-select: none;
-        pointer-events: none;
-
-        > {
-            flex: 0 0 1px;
-            max-width: 1px;
-            min-width: 1px;
-        }
-
-        &__scale {
-            position: relative;
-
-            &:before {
-                content: '';
-
-                position: absolute;
-                top: 9px;
-                bottom: 0;
-                left: 0;
-                right: 0;
-
-                width: 1px;
-
-                background: currentColor;
-            }
-
-            &:empty {
-                &:before {
-                    top: 10px;
-                    opacity: 0.5;
-                }
-            }
-
-            &__label {
-                position: absolute;
-                left: 50%;
-                top: 0;
-                transform: translateX(-50%) scale(0.7);
-                transform-origin: top center;
-            }
+    &__sliders {
+        &__container {
+            border: 1px solid #000;
+            height: 300px;
+            overflow: auto;
+            scroll-behavior: smooth;
         }
     }
 }

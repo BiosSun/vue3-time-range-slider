@@ -1,6 +1,6 @@
 <template>
-    <div class="time-range-slider__slider-bar">
-        <div class="time-range-slider__slider-bar__title">
+    <div class="time-range-slider__slider">
+        <div class="time-range-slider__slider__title">
             {{ title }}
         </div>
 
@@ -8,7 +8,7 @@
 
         <template v-for="(track, index) of disabledTracks" :key="index">
             <div
-                class="time-range-slider__slider-bar__disabled-rail"
+                class="time-range-slider__slider__disabled-rail"
                 :style="{
                     '--start': track.start,
                     '--end': track.end,
@@ -18,7 +18,7 @@
 
         <div
             v-if="activatedRange.track"
-            class="time-range-slider__slider-bar__rail"
+            class="time-range-slider__slider__rail"
             :style="{
                 '--start': activatedRange.track.start,
                 '--end': activatedRange.track.end,
@@ -27,7 +27,7 @@
 
         <div
             v-if="activatedRange.start"
-            class="time-range-slider__slider-bar__point"
+            class="time-range-slider__slider__point"
             :data-point="activatedRange.start.flag"
             :style="{
                 '--position': activatedRange.start.position,
@@ -36,7 +36,7 @@
 
         <div
             v-if="activatedRange.end"
-            class="time-range-slider__slider-bar__point"
+            class="time-range-slider__slider__point"
             :data-point="activatedRange.end.flag"
             :style="{
                 '--position': activatedRange.end.position,
