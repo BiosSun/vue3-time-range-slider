@@ -158,10 +158,8 @@ const leftInput = reactive({
     warned: false,
     setValue(value: Date | undefined) {
         leftInput.value = value
-        leftInput.outputValue =
-            value && rightInput.outputValue
-                ? clampTime(value, rightInput.outputValue, 'floor')
-                : value
+        leftInput.outputValue = clampTime(value, undefined, 'floor')
+        rightInput.outputValue = clampTime(rightInput.value, leftInput.outputValue, 'floor')
     },
     onChange(value: Date | undefined) {
         leftInput.setValue(value)
@@ -176,10 +174,8 @@ const rightInput = reactive({
     warned: false,
     setValue(value: Date | undefined) {
         rightInput.value = value
-        rightInput.outputValue =
-            value && leftInput.outputValue
-                ? clampTime(value, leftInput.outputValue, 'floor')
-                : value
+        rightInput.outputValue = clampTime(value, undefined, 'floor')
+        leftInput.outputValue = clampTime(leftInput.value, rightInput.outputValue, 'floor')
     },
     onChange(value: Date | undefined) {
         rightInput.setValue(value)
