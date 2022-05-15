@@ -1,7 +1,5 @@
 <template>
     <div class="time-range-slider__slider" ref="barEl">
-        <TimeRuler />
-
         <template v-for="(track, index) of disabledTracks" :key="index">
             <div
                 class="time-range-slider__slider__disabled-rail"
@@ -12,13 +10,7 @@
             />
         </template>
 
-        <div
-            v-if="hintTimeLinePosition !== undefined"
-            class="time-range-slider__slider__hint-time-line"
-            :style="{
-                '--position': hintTimeLinePosition,
-            }"
-        />
+        <TimeRuler />
 
         <div
             v-if="activatedRange.track"
@@ -44,6 +36,14 @@
             :data-point="activatedRange.end.flag"
             :style="{
                 '--position': activatedRange.end.position,
+            }"
+        />
+
+        <div
+            v-if="hintTimeLinePosition !== undefined"
+            class="time-range-slider__slider__hint-time-line"
+            :style="{
+                '--position': hintTimeLinePosition,
             }"
         />
 

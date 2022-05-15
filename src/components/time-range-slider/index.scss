@@ -61,6 +61,8 @@ $b: time-range-slider;
         user-select: none;
         pointer-events: none;
 
+        color: #a9abac;
+
         > {
             flex: 0 0 1px;
             max-width: 1px;
@@ -124,7 +126,7 @@ $b: time-range-slider;
             left: 5px;
             top: 0px;
             font-size: 12px;
-            line-height: 21px;
+            line-height: 20px;
             user-select: none;
             pointer-events: none;
         }
@@ -139,7 +141,7 @@ $b: time-range-slider;
 
         &__disabled-rail {
             @extend %rail;
-            background: #00000030;
+            background: #e7e9ea;
             pointer-events: none;
         }
 
@@ -163,7 +165,7 @@ $b: time-range-slider;
         }
 
         &__hint-time-line {
-            background: #c0c2c3;
+            background: #b0b2b3;
         }
     }
 
