@@ -109,6 +109,8 @@ $b: time-range-slider;
         height: var(--time-range-slider__slider--height, 34px);
         border-bottom: 1px solid #000;
 
+        contain: strict;
+
         > .#{$b}__ruler {
             position: absolute;
             left: 0;
