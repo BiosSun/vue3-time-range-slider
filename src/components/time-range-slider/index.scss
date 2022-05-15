@@ -118,7 +118,8 @@ $b: time-range-slider;
             bottom: 0;
         }
 
-        &__title {
+        &__date,
+        &__hint-time {
             position: absolute;
             left: 5px;
             top: 0px;

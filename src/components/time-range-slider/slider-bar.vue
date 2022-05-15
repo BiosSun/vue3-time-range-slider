@@ -1,9 +1,5 @@
 <template>
-    <div class="time-range-slider__slider">
-        <div class="time-range-slider__slider__title">
-            {{ title }}
-        </div>
-
+    <div class="time-range-slider__slider" ref="barEl">
         <TimeRuler />
 
         <template v-for="(track, index) of disabledTracks" :key="index">
@@ -42,19 +38,27 @@
                 '--position': activatedRange.end.position,
             }"
         />
+
+        <div class="time-range-slider__slider__date" ref="dateEl">
+            {{ dateStr }}
+        </div>
+
+        <div v-if="hintTimeStr" class="time-range-slider__slider__hint-time" ref="hintTimeEl">
+            {{ hintTimeStr }}
+        </div>
     </div>
 </template>
 <script lang="ts" setup>
+import { onMounted, ref, watch } from 'vue'
 import { format, startOfDay, endOfDay, max as maxDate, min as minDate } from 'date-fns'
 import {
     Range,
     getStartPoint,
     getEndPoint,
-    isSameDay,
     SliderStep,
     STEP_INFOS,
     isValidTime,
-    D_MS,
+    clamp,
 } from './util'
 import TimeRuler from './time-ruler.vue'
 
@@ -77,9 +81,38 @@ const {
 const step = $computed(() => STEP_INFOS[stepKey])
 const day = $computed(() => ({ date, start: startOfDay(date), end: endOfDay(date) }))
 
-const title = $computed(() => {
-    return hintTime ? format(hintTime, 'yyyy-MM-dd ' + step.tf) : format(day.date, 'yyyy-MM-dd')
-})
+const dateStr = $computed(() => format(day.date, 'yyyy-MM-dd'))
+const hintTimeStr = $computed(() => (hintTime ? format(hintTime, step.tf) : undefined))
+
+const barEl = $ref<HTMLElement | null>(null)
+const dateEl = $ref<HTMLElement | null>(null)
+const hintTimeEl = $ref<HTMLElement | null>(null)
+
+onMounted(updateHintTimePosition)
+watch($$(hintTimeStr), updateHintTimePosition, { flush: 'post' })
+
+function updateHintTimePosition() {
+    if (!hintTimeStr) {
+        return
+    }
+
+    if (!barEl || !hintTimeEl || !dateEl) {
+        return
+    }
+
+    const barWidth = barEl.clientWidth
+    const hintTimeWidth = hintTimeEl.clientWidth
+    const dateWidth = dateEl.clientWidth
+
+    const position = timeToPosition(hintTime!)
+    const center = barWidth * position
+    const left = center - hintTimeWidth / 2
+    const minLeft = 5 + dateWidth + 5
+    const maxLeft = barWidth - 5 - hintTimeWidth
+    const realLeft = clamp(left, minLeft, maxLeft)
+
+    hintTimeEl.style.setProperty('left', realLeft + 'px')
+}
 
 const activatedRange: { track?: Track; start?: Thumb; end?: Thumb } = $computed(() => {
     const startTime = step.floor(getStartPoint(timeRange))
