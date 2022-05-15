@@ -74,7 +74,6 @@ import {
     SliderStep,
     D_MS,
     STEP_INFOS,
-    detectLeftButton,
     checkMovedPoint,
     normalizeRange,
     isSameRange,
@@ -383,8 +382,11 @@ const slider = reactive({
                 }
             },
 
+            // 用户松开鼠标（DONE）：
             picked() {
-                // 有时用户会在其它地方按下鼠标，并在 SliderBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
+                emitEndPicking(slider.range)
+                emitChange(slider.range as Range) // WAIT
+                return 'WAIT'
             },
         },
 
@@ -404,11 +406,10 @@ const slider = reactive({
                 }
             },
 
-            // 用户松开鼠标：
+            // 用户松开鼠标（DONE）：
             picked() {
                 emitEndPicking(slider.range)
                 emitChange(slider.range as Range) // WAIT
-                slider.inactivate()
                 return 'WAIT'
             },
         },
@@ -660,6 +661,10 @@ const sliderItems = $computed(() => {
         }
     })
 })
+
+// watchEffect(() => {
+//     console.info('slider status:', slider.state)
+// })
 
 // 与外部进行状态同步
 // -----------------------------------------------------------------------------
