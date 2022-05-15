@@ -160,8 +160,7 @@ const leftInput = reactive({
         leftInput.value = value
         leftInput.outputValue =
             value && rightInput.outputValue
-                ? // snap - false
-                  clampTime(value, rightInput.outputValue, 'floor')
+                ? clampTime(value, rightInput.outputValue, 'floor')
                 : value
     },
     onChange(value: Date | undefined) {
@@ -179,8 +178,7 @@ const rightInput = reactive({
         rightInput.value = value
         rightInput.outputValue =
             value && leftInput.outputValue
-                ? // snap - false
-                  clampTime(value, leftInput.outputValue, 'floor')
+                ? clampTime(value, leftInput.outputValue, 'floor')
                 : value
     },
     onChange(value: Date | undefined) {
@@ -321,7 +319,6 @@ const slider = reactive({
 
             // 用户在 sliders 面板上按下鼠标：
             picking(time: Date | undefined) {
-                // snap - true
                 const clampedTime = clampTime(time, undefined, 'near')
                 if (
                     slider.setRangePoint('left', clampedTime) &&
@@ -347,7 +344,6 @@ const slider = reactive({
 
             // 用户按下鼠标的同时移动鼠标：
             picking(time: Date | undefined) {
-                // snap - false
                 const clampedTime = clampTime(time, undefined, 'near')
                 if (
                     slider.setRangePoint('left', clampedTime) &&
@@ -374,7 +370,6 @@ const slider = reactive({
 
             // 用户选中左时间点后，移动或按下鼠标：
             picking(time: Date | undefined, event: MouseEvent) {
-                // snap - true
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
@@ -401,7 +396,6 @@ const slider = reactive({
 
             // 用户按下鼠标后继续移动：
             picking(time: Date | undefined, event: MouseEvent) {
-                // snap - !detectLeftButton(event)
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
@@ -478,7 +472,6 @@ const slider = reactive({
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
         const time = slider.getTimeByMouseEvent(event)
-        // snap - true
         slider.hintTime = clampTime(time, undefined, 'near')
     },
 
