@@ -178,6 +178,8 @@ export const STEP_INFOS: { [key in SliderStep]: StepInfo } = {
  */
 export type Range = (Date | undefined)[]
 
+export const EMPTY_RANGE: Range = Object.freeze([undefined, undefined]) as any
+
 export function isValidRange(range: any): range is Range {
     return Array.isArray(range) && isValidOptionalTime(range[0]) && isValidOptionalTime(range[1])
 }

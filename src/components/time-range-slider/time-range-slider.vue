@@ -30,14 +30,14 @@
         <div class="time-range-slider__sliders__container" ref="sliderContainer">
             <div @mousemove="slider.onListMouseMove" @mouseleave="slider.onListMouseLeave">
                 <SliderBar
-                    v-for="date of slider.dates"
-                    :key="date.valueOf()"
-                    :date="date"
+                    v-for="item of sliderItems"
+                    :key="item.date.valueOf()"
+                    :date="item.date"
                     :min="min"
                     :max="max"
                     :step="stepKey"
-                    :timeRange="slider.range"
-                    :hintTime="slider.hintTime"
+                    :timeRange="item.range"
+                    :hintTime="item.hintTime"
                     @mousedown="slider.onItemMouseDown"
                 />
             </div>
@@ -53,8 +53,9 @@ import {
     subMilliseconds,
     addMilliseconds,
     isSameDay,
+    startOfDay,
 } from 'date-fns'
-import { computed, nextTick, reactive, watch } from 'vue'
+import { computed, nextTick, reactive, toRaw, watch } from 'vue'
 import scrollIntoView from 'scroll-into-view-if-needed'
 import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
@@ -80,6 +81,7 @@ import {
     ensureSameDirection,
     getRangeDuration,
     StepInfo,
+    EMPTY_RANGE,
 } from './util'
 
 // API
@@ -633,6 +635,30 @@ const slider = reactive({
             slider.ACTION_HANDLERS[slider.state].enter?.()
         }
     },
+})
+
+const sliderItems = $computed(() => {
+    const dates = toRaw(slider.dates)
+    const range = slider.range
+    const [startPoint, endPoint] = normalizeRange(range)
+    const hintTime = slider.hintTime
+
+    const dateOfHintTime = hintTime ? startOfDay(hintTime).valueOf() : undefined
+    const dateOfStartPoint = startPoint ? startOfDay(startPoint).valueOf() : undefined
+    const dateOfEndPoint = endPoint ? startOfDay(endPoint).valueOf() : dateOfStartPoint
+
+    return dates.map((date) => {
+        const dateValue = date.valueOf()
+
+        const passRange = dateValue >= dateOfStartPoint! && dateValue <= dateOfEndPoint!
+        const passHintTime = dateOfHintTime === dateValue
+
+        return {
+            date,
+            range: passRange ? range : EMPTY_RANGE,
+            hintTime: passHintTime ? hintTime : undefined,
+        }
+    })
 })
 
 // 与外部进行状态同步

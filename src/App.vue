@@ -6,7 +6,7 @@ import DateTimeInput from './date-time-input.vue'
 
 let step: SliderStep = $ref('second')
 const sliderMin: Date = $ref(new Date(2022, 0, 1, 15, 9, 12, 192))
-const sliderMax: Date = $ref(new Date(2022, 0, 17, 12, 38, 43, 894))
+const sliderMax: Date = $ref(new Date(2022, 3, 17, 12, 38, 43, 894))
 let limitEnable = $ref(true)
 let limit = 1000 * 60 * 60 * 24 * 7
 let timeRange: (Date | undefined)[] = $ref([

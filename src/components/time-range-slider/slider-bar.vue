@@ -78,11 +78,7 @@ const step = $computed(() => STEP_INFOS[stepKey])
 const day = $computed(() => ({ date, start: startOfDay(date), end: endOfDay(date) }))
 
 const title = $computed(() => {
-    if (hintTime && isSameDay(day.date, hintTime)) {
-        return format(hintTime, 'yyyy-MM-dd ' + step.tf)
-    }
-
-    return format(day.date, 'yyyy-MM-dd')
+    return hintTime ? format(hintTime, 'yyyy-MM-dd ' + step.tf) : format(day.date, 'yyyy-MM-dd')
 })
 
 const activatedRange: { track?: Track; start?: Thumb; end?: Thumb } = $computed(() => {
