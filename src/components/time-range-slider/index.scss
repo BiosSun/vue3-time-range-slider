@@ -1,6 +1,9 @@
 $b: time-range-slider;
 
 .#{$b} {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+
     // 输入框
     // --------------------
 
@@ -54,9 +57,6 @@ $b: time-range-slider;
 
         font-size: 12px;
         line-height: 12px;
-
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: 'tnum';
 
         user-select: none;
         pointer-events: none;

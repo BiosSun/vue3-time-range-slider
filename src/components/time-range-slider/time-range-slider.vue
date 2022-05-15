@@ -1,5 +1,5 @@
 <template>
-    <div style="width: 600px; margin: 30px auto">
+    <div class="time-range-slider" style="width: 600px; margin: 30px auto">
         <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px">
             <div style="display: flex; gap: 8px; align-items: center">
                 <DateTimeInput
