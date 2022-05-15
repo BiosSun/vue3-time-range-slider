@@ -38,6 +38,7 @@
                     :step="stepKey"
                     :timeRange="item.range"
                     :hintTime="item.hintTime"
+                    :hintTimeLine="item.hintTimeLine"
                     @mousedown="slider.onItemMouseDown"
                 />
             </div>
@@ -279,6 +280,7 @@ const slider = reactive({
     state: 'WAIT' as SliderState,
     range: [undefined, undefined] as Range,
     hintTime: undefined as Date | undefined,
+    hintTimeLine: true,
 
     /** 表示用户当前正在与 sliders 面板进行交互 */
     activated: false,
@@ -309,10 +311,12 @@ const slider = reactive({
             enter() {
                 slider.inactivate()
                 slider.snapMode = SnapMode.Large
+                slider.hintTimeLine = true
             },
 
             leave() {
                 slider.activate()
+                slider.hintTimeLine = false
             },
 
             // 用户在 sliders 面板上按下鼠标：
@@ -643,6 +647,7 @@ const sliderItems = $computed(() => {
     const range = slider.range
     const [startPoint, endPoint] = normalizeRange(range)
     const hintTime = slider.hintTime
+    const hintTimeLine = slider.hintTimeLine
 
     const dateOfHintTime = hintTime ? startOfDay(hintTime).valueOf() : undefined
     const dateOfStartPoint = startPoint ? startOfDay(startPoint).valueOf() : undefined
@@ -658,6 +663,7 @@ const sliderItems = $computed(() => {
             date,
             range: passRange ? range : EMPTY_RANGE,
             hintTime: passHintTime ? hintTime : undefined,
+            hintTimeLine: passHintTime ? hintTimeLine : false,
         }
     })
 })

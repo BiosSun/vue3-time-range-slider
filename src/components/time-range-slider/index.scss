@@ -149,13 +149,21 @@ $b: time-range-slider;
             pointer-events: none;
         }
 
-        &__point {
+        &__point,
+        &__hint-time-line {
             position: absolute;
             top: 0;
             bottom: 0;
             left: calc(100% * var(--position) - 2px * var(--position));
             width: 2px;
+        }
+
+        &__point {
             background: #00aaff;
+        }
+
+        &__hint-time-line {
+            background: #c0c2c3;
         }
     }
 

@@ -13,6 +13,14 @@
         </template>
 
         <div
+            v-if="hintTimeLinePosition !== undefined"
+            class="time-range-slider__slider__hint-time-line"
+            :style="{
+                '--position': hintTimeLinePosition,
+            }"
+        />
+
+        <div
             v-if="activatedRange.track"
             class="time-range-slider__slider__rail"
             :style="{
@@ -66,6 +74,7 @@ const {
     date,
     timeRange,
     hintTime,
+    hintTimeLine,
     step: stepKey,
     min,
     max,
@@ -73,6 +82,7 @@ const {
     date: Date
     timeRange: Range
     hintTime?: Date
+    hintTimeLine?: boolean
     step: SliderStep
     min?: Date
     max?: Date
@@ -83,6 +93,9 @@ const day = $computed(() => ({ date, start: startOfDay(date), end: endOfDay(date
 
 const dateStr = $computed(() => format(day.date, 'yyyy-MM-dd'))
 const hintTimeStr = $computed(() => (hintTime ? format(hintTime, step.tf) : undefined))
+const hintTimeLinePosition = $computed(() =>
+    hintTime && hintTimeLine ? timeToPosition(hintTime) : undefined,
+)
 
 const barEl = $ref<HTMLElement | null>(null)
 const dateEl = $ref<HTMLElement | null>(null)
