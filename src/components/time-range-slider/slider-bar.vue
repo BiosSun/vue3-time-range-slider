@@ -67,7 +67,7 @@ const {
     max,
 } = defineProps<{
     date: Date
-    timeRange?: Range
+    timeRange: Range
     hintTime?: Date
     step: SliderStep
     min?: Date

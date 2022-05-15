@@ -135,14 +135,6 @@ const sliderStep: SliderStep = $ref('second')
 
     <hr />
 
-    <h2>timeRange: undefined</h2>
-    <TimeRangeSlider.SliderBar
-        :date="new Date(2022, 0, 5)"
-        :timeRange="undefined"
-        :step="sliderStep"
-        style="border: 1px solid #000"
-    />
-
     <h2>timeRange: [undefined, undefined]</h2>
     <TimeRangeSlider.SliderBar
         :date="new Date(2022, 0, 5)"

@@ -281,16 +281,8 @@ export function ensureSameDirection(r1: Range, r2: Range): Range {
     return isSameDirection ? r1 : [r1[1], r1[0]]
 }
 
-export function getStartPoint(range: Range | undefined): Date | undefined {
-    return !isValidRange(range)
-        ? undefined
-        : !range[0]
-        ? range[1]
-        : !range[1]
-        ? range[0]
-        : range[0] <= range[1]
-        ? range[0]
-        : range[1]
+export function getStartPoint(range: Range): Date | undefined {
+    return !range[0] ? range[1] : !range[1] ? range[0] : range[0] <= range[1] ? range[0] : range[1]
 }
 
 export function getEndPoint(range: Range | undefined): Date | undefined {
