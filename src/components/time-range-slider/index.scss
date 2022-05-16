@@ -182,6 +182,15 @@ $b: time-range-slider;
     &__main {
         border: 1px solid #000;
         height: 300px;
+        position: relative;
+
+        &__scrollbar-cover {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.04);
+        }
     }
 
     &__sliders-container {

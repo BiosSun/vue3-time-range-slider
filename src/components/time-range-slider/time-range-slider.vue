@@ -40,6 +40,11 @@
                     />
                 </div>
             </div>
+            <div
+                v-if="slider.activated && slider.scrollBarWidth"
+                class="time-range-slider__main__scrollbar-cover"
+                :style="{ width: slider.scrollBarWidth + 'px' }"
+            />
         </div>
     </div>
 </template>
@@ -280,6 +285,8 @@ const slider = reactive({
     itemWidth: 0,
     itemHeight: 0,
 
+    scrollBarWidth: 0,
+
     snapMode: SnapMode.Large,
     granularity: Granularity.FiveMinutes,
 
@@ -309,6 +316,7 @@ const slider = reactive({
             leave() {
                 slider.activate()
                 slider.hintTimeLine = false
+                slider.updateScrollBarWidth()
             },
 
             // 用户在 sliders 面板上按下鼠标：
@@ -571,6 +579,10 @@ const slider = reactive({
 
         slider.itemWidth = itemRect.width
         slider.itemHeight = itemRect.height
+    },
+
+    updateScrollBarWidth() {
+        slider.scrollBarWidth = sliderContainer.offsetWidth - sliderContainer.clientWidth
     },
 
     async scrollIntoChangedPointIfNeeded(originalRange: Range, newRange: Range) {
