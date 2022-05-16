@@ -51,9 +51,6 @@ $b: time-range-slider;
 
     &__ruler {
         height: 13px;
-        display: flex;
-        align-items: stretch;
-        justify-content: space-evenly;
 
         font-size: 12px;
         line-height: 12px;
@@ -63,41 +60,37 @@ $b: time-range-slider;
 
         color: #a9abac;
 
-        > {
-            flex: 0 0 1px;
-            max-width: 1px;
-            min-width: 1px;
-        }
-
         &__scale {
-            position: relative;
+            position: absolute;
+            bottom: 0;
 
-            &:before {
-                content: '';
+            height: 3px;
+            width: 1px;
 
-                position: absolute;
-                top: 9px;
-                bottom: 0;
-                left: 0;
-                right: 0;
+            background: #d4d5d5;
 
-                width: 1px;
-
-                background: currentColor;
+            @for $i from 1 to 24 {
+                &__#{$i} {
+                    left: ($i / 24) * 100%;
+                }
             }
 
-            &:empty {
-                &:before {
-                    top: 10px;
-                    opacity: 0.5;
-                }
+            &__3,
+            &__6,
+            &__9,
+            &__12,
+            &__15,
+            &__18,
+            &__21 {
+                height: 4px;
+                background: #a9abac;
             }
         }
 
         &__label {
             position: absolute;
-            left: 50%;
-            top: 0;
+            left: 0;
+            bottom: 1px;
             transform: translateX(-50%) scale(0.7);
             transform-origin: top center;
         }

@@ -4,6 +4,7 @@ import TimeRangeSlider from './components/time-range-slider'
 import { SliderStep } from './components/time-range-slider/util'
 import DateTimeInput from './date-time-input.vue'
 
+let visible: boolean = $ref(true)
 let step: SliderStep = $ref('second')
 const sliderMin: Date = $ref(new Date(2022, 0, 1, 15, 9, 12, 192))
 const sliderMax: Date = $ref(new Date(2022, 3, 17, 12, 38, 43, 894))
@@ -80,7 +81,12 @@ const sliderStep: SliderStep = $ref('second')
 
     <br />
 
+    <button @click="visible = !visible">toggle visible</button>
+
+    <br />
+
     <TimeRangeSlider
+        v-if="visible"
         :modelValue="timeRange"
         :min="sliderMin"
         :max="sliderMax"
