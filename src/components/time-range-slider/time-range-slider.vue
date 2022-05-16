@@ -1,46 +1,44 @@
 <template>
     <div class="time-range-slider" style="width: 600px; margin: 30px auto">
-        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px">
-            <div style="display: flex; gap: 8px; align-items: center">
-                <DateTimeInput
-                    :modelValue="leftInput.value"
-                    :min="min"
-                    :max="max"
-                    :step="stepKey"
-                    :warned="inputWarned"
-                    @update:modelValue="leftInput.onChange"
-                    @focus="leftInput.focused = true"
-                    @blur="leftInput.focused = false"
-                />
-            </div>
+        <div class="time-range-slider__header">
+            <DateTimeInput
+                :modelValue="leftInput.value"
+                :min="min"
+                :max="max"
+                :step="stepKey"
+                :warned="inputWarned"
+                @update:modelValue="leftInput.onChange"
+                @focus="leftInput.focused = true"
+                @blur="leftInput.focused = false"
+            />
             <span>-</span>
-            <div style="display: flex; gap: 8px; align-items: center">
-                <DateTimeInput
-                    :modelValue="rightInput.value"
-                    :min="min"
-                    :max="max"
-                    :step="stepKey"
-                    :warned="inputWarned"
-                    @update:modelValue="rightInput.onChange"
-                    @focus="rightInput.focused = true"
-                    @blur="rightInput.focused = false"
-                />
-            </div>
+            <DateTimeInput
+                :modelValue="rightInput.value"
+                :min="min"
+                :max="max"
+                :step="stepKey"
+                :warned="inputWarned"
+                @update:modelValue="rightInput.onChange"
+                @focus="rightInput.focused = true"
+                @blur="rightInput.focused = false"
+            />
         </div>
-        <div class="time-range-slider__sliders__container" ref="sliderContainer">
-            <div @mousemove="slider.onListMouseMove" @mouseleave="slider.onListMouseLeave">
-                <SliderBar
-                    v-for="item of sliderItems"
-                    :key="item.date.valueOf()"
-                    :date="item.date"
-                    :min="min"
-                    :max="max"
-                    :step="stepKey"
-                    :timeRange="item.range"
-                    :hintTime="item.hintTime"
-                    :hintTimeLine="item.hintTimeLine"
-                    @mousedown="slider.onItemMouseDown"
-                />
+        <div class="time-range-slider__main">
+            <div class="time-range-slider__sliders-container" ref="sliderContainer">
+                <div @mousemove="slider.onListMouseMove" @mouseleave="slider.onListMouseLeave">
+                    <SliderBar
+                        v-for="item of sliderItems"
+                        :key="item.date.valueOf()"
+                        :date="item.date"
+                        :min="min"
+                        :max="max"
+                        :step="stepKey"
+                        :timeRange="item.range"
+                        :hintTime="item.hintTime"
+                        :hintTimeLine="item.hintTimeLine"
+                        @mousedown="slider.onItemMouseDown"
+                    />
+                </div>
             </div>
         </div>
     </div>

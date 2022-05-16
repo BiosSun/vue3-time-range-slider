@@ -172,12 +172,21 @@ $b: time-range-slider;
     // Sliders
     // --------------------
 
-    &__sliders {
-        &__container {
-            border: 1px solid #000;
-            height: 300px;
-            overflow: auto;
-            scroll-behavior: smooth;
-        }
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    &__main {
+        border: 1px solid #000;
+        height: 300px;
+    }
+
+    &__sliders-container {
+        height: 100%;
+        overflow: auto;
+        scroll-behavior: smooth;
     }
 }
