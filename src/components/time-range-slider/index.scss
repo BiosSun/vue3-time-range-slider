@@ -101,10 +101,16 @@ $b: time-range-slider;
 
     &__slider {
         position: relative;
-        height: var(--time-range-slider__slider--height, 34px);
-        border-bottom: 1px solid #000;
+        box-sizing: border-box;
+        height: var(--time-range-slider__slider--height, 35px);
+        border-top: 1px solid #000;
 
         contain: strict;
+
+        // 隐藏第一个元素的上边框
+        &:first-child {
+            margin-top: -1px;
+        }
 
         > .#{$b}__ruler {
             position: absolute;
