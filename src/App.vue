@@ -104,6 +104,7 @@ const sliderStep: SliderStep = $ref('second')
         :max="sliderMax"
         :limit="limitEnable ? limit : undefined"
         :step="step"
+        style="width: 735px; height: 350px; margin: 30px auto"
         @change="onTimeRangeChange"
         @startPicking="onTimeRangeStartPicking"
         @picking="onTimeRangePicking"

@@ -1,5 +1,5 @@
 <template>
-    <div class="time-range-slider" style="width: 600px; margin: 30px auto">
+    <div class="time-range-slider">
         <div class="time-range-slider__header">
             <DateTimeInput
                 :modelValue="leftInput.value"
