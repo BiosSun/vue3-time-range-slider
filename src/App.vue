@@ -65,7 +65,8 @@ const sliderStep: SliderStep = $ref('second')
     <DateTimeInput label="start" v-model="timeRange[0]" />&nbsp;
     <DateTimeInput label="end" v-model="timeRange[1]" /><br />
     <button @click="timeRange = [undefined, undefined]">clean all</button>&nbsp;
-    {{ { modelValue: timeRange } }}
+    <!-- prettier-ignore -->
+    {{ ( { modelValue: timeRange } ) }}
 
     <br />
 
@@ -118,7 +119,8 @@ const sliderStep: SliderStep = $ref('second')
     <br />
 
     <DateTimeInput label="time" v-model="dateTimeInputValue" />&nbsp;
-    {{ { modelValue: dateTimeInputValue } }}
+    <!-- prettier-ignore -->
+    {{ ( { modelValue: dateTimeInputValue } ) }}
 
     <br />
 
