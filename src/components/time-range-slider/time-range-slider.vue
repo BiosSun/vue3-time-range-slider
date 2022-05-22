@@ -65,7 +65,6 @@ import {
     differenceInDays,
 } from 'date-fns'
 import { computed, nextTick, reactive, toRaw, watch } from 'vue'
-import scrollIntoView from 'scroll-into-view-if-needed'
 import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
 import {
