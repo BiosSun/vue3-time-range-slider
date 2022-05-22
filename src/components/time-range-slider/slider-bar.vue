@@ -46,7 +46,15 @@
         />
 
         <div class="time-range-slider__slider__date" ref="dateEl">
-            {{ dateStr }}
+            <template v-if="isWeekend">
+                {{ dateStrFirstPart
+                }}<strong class="time-range-slider__slider__date__weekend-flag">{{
+                    dateStrSecondPart
+                }}</strong>
+            </template>
+            <template v-else>
+                {{ dateStrFirstPart + dateStrSecondPart }}
+            </template>
         </div>
 
         <div v-if="hintTimeStr" class="time-range-slider__slider__hint-time" ref="hintTimeEl">
@@ -56,7 +64,14 @@
 </template>
 <script lang="ts" setup>
 import { onMounted, watch } from 'vue'
-import { format, startOfDay, endOfDay, max as maxDate, min as minDate } from 'date-fns'
+import {
+    format,
+    startOfDay,
+    endOfDay,
+    max as maxDate,
+    min as minDate,
+    isWeekend as _isWeekend,
+} from 'date-fns'
 import {
     Range,
     getStartPoint,
@@ -87,9 +102,18 @@ const {
 }>()
 
 const step = $computed(() => STEP_INFOS[stepKey])
-const day = $computed(() => ({ date, start: startOfDay(date), end: endOfDay(date) }))
+const day = $computed(() => ({ start: startOfDay(date), end: endOfDay(date) }))
 
-const dateStr = $computed(() => format(day.date, 'yyyy-MM-dd'))
+const isWeekend = $computed(() => _isWeekend(date))
+
+const dateStrFirstPart = $computed(() => {
+    return date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-'
+})
+
+const dateStrSecondPart = $computed(() => {
+    return date.getDate().toString().padStart(2, '0')
+})
+
 const hintTimeStr = $computed(() => (hintTime ? format(hintTime, step.tf) : undefined))
 const hintTimeLinePosition = $computed(() =>
     hintTime && hintTimeLine ? timeToPosition(hintTime) : undefined,

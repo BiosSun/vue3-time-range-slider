@@ -130,6 +130,13 @@ $b: time-range-slider;
             pointer-events: none;
         }
 
+        &__date {
+            &__weekend-flag {
+                font-weight: normal;
+                text-decoration: underline;
+            }
+        }
+
         %rail {
             position: absolute;
             top: 0;
