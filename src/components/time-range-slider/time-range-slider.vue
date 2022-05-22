@@ -25,7 +25,11 @@
         </div>
         <div class="time-range-slider__main">
             <div class="time-range-slider__sliders-container" ref="sliderContainer">
-                <div @mousemove="slider.onListMouseMove" @mouseleave="slider.onListMouseLeave">
+                <div
+                    ref="sliderList"
+                    @mousemove="slider.onListMouseMove"
+                    @mouseleave="slider.onListMouseLeave"
+                >
                     <SliderBar
                         v-for="item of sliderItems"
                         :key="item.date.valueOf()"
@@ -58,6 +62,7 @@ import {
     addMilliseconds,
     isSameDay,
     startOfDay,
+    differenceInDays,
 } from 'date-fns'
 import { computed, nextTick, reactive, toRaw, watch } from 'vue'
 import scrollIntoView from 'scroll-into-view-if-needed'
@@ -271,6 +276,7 @@ type SliderState = 'WAIT' | 'LEFT_PICKING' | 'LEFT_PICKED' | 'RIGHT_PICKING'
 type SliderAction = 'picking' | 'picked'
 
 const sliderContainer: HTMLElement = $ref()
+const sliderList: HTMLElement = $ref()
 
 const slider = reactive({
     dates: computed(() => eachDayOfInterval({ start: min, end: max })),
@@ -574,6 +580,12 @@ const slider = reactive({
         return calcTimeByPosition(dates[itemIndex], itemX, itemWidth, granularity, snapMode)
     },
 
+    ensureItemSize() {
+        if (slider.itemWidth === 0 && slider.itemHeight === 0 && sliderList) {
+            this.updateItemSize(sliderList.children[0])
+        }
+    },
+
     updateItemSize(itemEl: Element) {
         const itemRect = itemEl.getBoundingClientRect()
 
@@ -586,6 +598,13 @@ const slider = reactive({
     },
 
     async scrollIntoChangedPointIfNeeded(originalRange: Range, newRange: Range) {
+        if (isEmptyRange(newRange)) {
+            return
+        }
+
+        originalRange = [...originalRange]
+        newRange = [...newRange]
+
         let actionId = ++slider.scrollActionId
 
         await nextTick()
@@ -594,41 +613,69 @@ const slider = reactive({
             return
         }
 
-        let movedPoint: 'start' | 'end' | undefined
-        let behavior: 'none' | 'auto'
+        if (!sliderContainer) {
+            return
+        }
 
-        if (isEmptyRange(originalRange) && isFullRange(newRange)) {
-            movedPoint = 'start'
-            behavior = 'none'
+        this.ensureItemSize()
+
+        const [newStartTime, newEndTime] = normalizeRange(newRange)
+
+        const startItemIndex = differenceInDays(startOfDay(newStartTime!), startOfDay(min))
+        const endItemIndex = newEndTime
+            ? differenceInDays(startOfDay(newEndTime), startOfDay(min))
+            : startItemIndex
+
+        const itemHeight = slider.itemHeight
+        const containerHeight = sliderContainer.getBoundingClientRect().height
+
+        let scrollY: number = 0
+
+        const startItemTop = startItemIndex * itemHeight
+        const endItemBottom = (endItemIndex + 1) * itemHeight
+
+        if (endItemBottom - startItemTop <= containerHeight) {
+            scrollY = startItemTop - (containerHeight - (endItemBottom - startItemTop)) / 2
+        } else if (startItemIndex === endItemIndex) {
+            scrollY = startItemTop
+        } else if (isEmptyRange(originalRange)) {
+            scrollY = startItemTop - 10
         } else {
-            movedPoint = checkMovedPoint(originalRange, newRange)
-            behavior = 'auto'
+            let movedPoint: 'start' | 'end' | undefined
+
+            if (leftInput.focused && leftInput.outputValue) {
+                movedPoint =
+                    !rightInput.outputValue || leftInput.outputValue < rightInput.outputValue
+                        ? 'start'
+                        : 'end'
+            } else if (rightInput.focused && rightInput.outputValue) {
+                movedPoint =
+                    !leftInput.outputValue || rightInput.outputValue < leftInput.outputValue
+                        ? 'start'
+                        : 'end'
+            } else {
+                movedPoint = checkMovedPoint(originalRange, newRange)
+            }
+
+            if (movedPoint === 'end') {
+                scrollY = endItemBottom - containerHeight + 10
+            } else {
+                scrollY = startItemTop - 10
+            }
         }
 
-        if (!movedPoint) {
-            return
-        }
-
-        const pointEl = sliderContainer?.querySelector(`[data-point=${movedPoint}]`)
-
-        if (!pointEl) {
-            return
-        }
+        const behavior = isEmptyRange(originalRange) && isFullRange(newRange) ? 'none' : 'auto'
 
         // scroll
         if (behavior == 'none') {
-            sliderContainer!.style.setProperty('scroll-behavior', 'auto')
+            sliderContainer.style.setProperty('scroll-behavior', 'auto')
 
             nextTick(() => {
-                sliderContainer!.style.removeProperty('scroll-behavior')
+                sliderContainer?.style.removeProperty('scroll-behavior')
             })
         }
 
-        scrollIntoView(pointEl, {
-            scrollMode: 'if-needed',
-            block: 'nearest',
-            inline: 'nearest',
-        })
+        sliderContainer.scrollTo(0, scrollY)
     },
 
     dispatch(action: SliderAction, time: Date | undefined, event: MouseEvent) {

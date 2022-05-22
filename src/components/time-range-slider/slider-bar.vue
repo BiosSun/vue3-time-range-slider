@@ -24,7 +24,6 @@
         <div
             v-if="activatedRange.start"
             class="time-range-slider__slider__point"
-            :data-point="activatedRange.start.flag"
             :style="{
                 '--position': activatedRange.start.position,
             }"
@@ -33,7 +32,6 @@
         <div
             v-if="activatedRange.end"
             class="time-range-slider__slider__point"
-            :data-point="activatedRange.end.flag"
             :style="{
                 '--position': activatedRange.end.position,
             }"
