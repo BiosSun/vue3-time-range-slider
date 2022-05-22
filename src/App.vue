@@ -11,8 +11,8 @@ const sliderMax: Date = $ref(new Date(2022, 3, 17, 12, 38, 43, 894))
 let limitEnable = $ref(true)
 let limit = 1000 * 60 * 60 * 24 * 7
 let timeRange: (Date | undefined)[] = $ref([
-    new Date(2022, 0, 5, 23, 45, 20, 111),
-    new Date(2022, 0, 2, 0, 20, 51, 555),
+    new Date(2022, 3, 17, 10, 0, 0, 0),
+    new Date(2022, 3, 17, 12, 38, 43, 894),
 ])
 
 // let timeRange = $ref([new Date(2022, 0, 2, 0, 0), new Date(2022, 0, 5, 23, 59, 59, 999)])
@@ -28,6 +28,18 @@ function onTimeRangeChange(range: any) {
     }
 
     timeRange = range
+}
+
+function onTimeRangeStartPicking() {
+    console.info('- onTimeRangeStartPicking')
+}
+
+function onTimeRangePicking() {
+    console.info('- onTimeRangePicking')
+}
+
+function onTimeRangeEndPicking() {
+    console.info('- onTimeRangeEndPicking')
 }
 
 let dateTimeInputValue: Date | undefined = $ref(new Date(2022, 1, 2, 15, 9, 12, 192))
@@ -93,6 +105,9 @@ const sliderStep: SliderStep = $ref('second')
         :limit="limitEnable ? limit : undefined"
         :step="step"
         @change="onTimeRangeChange"
+        @startPicking="onTimeRangeStartPicking"
+        @picking="onTimeRangePicking"
+        @endPicking="onTimeRangeEndPicking"
     />
 
     <hr />

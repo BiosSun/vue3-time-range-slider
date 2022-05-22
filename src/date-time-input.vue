@@ -1,7 +1,13 @@
 <template>
     <label>
         {{ label }}:
-        <input type="datetime-local" style="height: 22px" :value="datetimeStr" @change="onInputChange" step="1" />
+        <input
+            type="datetime-local"
+            style="height: 22px"
+            :value="datetimeStr"
+            @change="onInputChange"
+            step="1"
+        />
         <button @click="onChange(undefined)">x</button>
     </label>
 </template>
@@ -54,7 +60,6 @@ function formatDateTime(date: Date | undefined) {
     try {
         return format(date!, DATE_TIME_TEMPLATE)
     } catch (e) {
-        console.error(e)
         return undefined
     }
 }
@@ -70,9 +75,7 @@ function parseDateTime(str: string | undefined) {
             if (isValid(datetime)) {
                 return datetime
             }
-        } catch (e) {
-            console.error(e)
-        }
+        } catch {}
     }
 
     return undefined
