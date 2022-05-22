@@ -19,7 +19,7 @@ $b: time-range-slider;
 
     &__input {
         box-sizing: border-box;
-        border: 1px solid #767676;
+        border: 1px solid rgb(0 9 25 / 25%);
         border-radius: 2px;
         height: 24px;
         padding: 0 0 0 2px;
@@ -58,7 +58,7 @@ $b: time-range-slider;
         user-select: none;
         pointer-events: none;
 
-        color: #a9abac;
+        color: rgb(0 9 25 / 35%);
 
         &__scale {
             position: absolute;
@@ -67,7 +67,7 @@ $b: time-range-slider;
             height: 3px;
             width: 1px;
 
-            background: #d4d5d5;
+            background: rgb(0 9 25 / 25%);
 
             @for $i from 1 to 24 {
                 &__#{$i} {
@@ -83,7 +83,7 @@ $b: time-range-slider;
             &__18,
             &__21 {
                 height: 4px;
-                background: #a9abac;
+                background: rgb(0 9 25 / 25%);
             }
         }
 
@@ -103,7 +103,7 @@ $b: time-range-slider;
         position: relative;
         box-sizing: border-box;
         height: var(--time-range-slider__slider--height, 35px);
-        border-top: 1px solid #000;
+        border-top: 1px solid rgb(0 9 25 / 25%);
 
         contain: strict;
 
@@ -140,7 +140,7 @@ $b: time-range-slider;
 
         &__disabled-rail {
             @extend %rail;
-            background: #e7e9ea;
+            background: rgb(0 9 25 / 8%);
             pointer-events: none;
         }
 
@@ -164,7 +164,7 @@ $b: time-range-slider;
         }
 
         &__hint-time-line {
-            background: #b0b2b3;
+            background: rgb(0 9 25 / 25%);
         }
     }
 
@@ -174,14 +174,17 @@ $b: time-range-slider;
     &__header {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 8px;
         margin-bottom: 16px;
     }
 
     &__main {
-        border: 1px solid #000;
+        background: #fff;
+        border: 1px solid rgb(0 9 25 / 25%);
+        border-radius: 2px;
         height: 300px;
         position: relative;
+        overflow: hidden;
 
         &__scrollbar-cover {
             position: absolute;
