@@ -774,7 +774,7 @@ function emitEndPicking(range: Range) {
 }
 
 function emitChange(range: Range) {
-    const outputRange = isFullRange(range) ? normalizeRange(range) as [Date, Date] : [] as []
+    const outputRange = isFullRange(range) ? (normalizeRange(range) as [Date, Date]) : ([] as [])
     emit('update:modelValue', outputRange)
     emit('change', outputRange)
 }
