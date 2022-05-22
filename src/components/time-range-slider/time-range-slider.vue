@@ -730,20 +730,17 @@ const sliderItems = $computed(() => {
 //         没有改变，slider 和 input 中的时间区间肯定不会和 modelValue 一样，所以它们会被强行设置为 modelValue，
 //         紧接着 modelValue 改变又一次触发 watch，slider 和 input 会再被设置为新的 modelValue 的值）
 watch(
-    [$$(modelValue), computed(() => slider.activated), inputFocused],
+    [$$(modelValue), computed(() => slider.activated), $$(inputFocused)],
     ([modelValue, sliderActivated, inputFocused]) => {
         // 当用户正在 slider 面板中选取时间时，不响应外部的状态改变
-        if (sliderActivated) {
-            return
+        if (!sliderActivated) {
+            modelValueToSlideRange()
         }
 
         // 当用户正在时间输入框中输入值时，不响应外部的状态改变
-        if (inputFocused) {
-            return
+        if (!inputFocused) {
+            modelValueToInputRange()
         }
-
-        modelValueToSlideRange()
-        modelValueToInputRange()
     },
     { immediate: true, deep: true },
 )
