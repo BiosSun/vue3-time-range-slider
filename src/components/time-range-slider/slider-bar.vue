@@ -55,7 +55,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { format, startOfDay, endOfDay, max as maxDate, min as minDate } from 'date-fns'
 import {
     Range,

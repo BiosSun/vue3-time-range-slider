@@ -29,7 +29,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { format, parse, isValid, isSameDay } from 'date-fns'
+import { format, parse, isValid } from 'date-fns'
 import { watch } from 'vue'
 import useIsFocused from './use-is-focused'
 import { clampTime, isSameTime, mergeDateAndTime, SliderStep, STEP_INFOS } from './util'
