@@ -503,7 +503,7 @@ vue-tsc@^0.34.15:
   dependencies:
     "@volar/vue-typescript" "0.34.15"
 
-vue@^3.2.0:
+vue@^3.2.25:
   version "3.2.35"
   resolved "https://registry.npmmirror.com/vue/-/vue-3.2.35.tgz#e0a63a8b2fcc0334a936d484d646e31b571e3f80"
   integrity sha512-mc/15B0Wjd/4JMMGOcXUQAeXfjyg8MImA2EVZucNdyDPJe1nXhMNbYXOEVPEGfk/mCeyszCzl44dSAhHhQVH8g==
