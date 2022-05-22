@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $b: time-range-slider;
 
 .#{$b} {
@@ -71,7 +73,7 @@ $b: time-range-slider;
 
             @for $i from 1 to 24 {
                 &__#{$i} {
-                    left: ($i / 24) * 100%;
+                    left: (math.div($i, 24)) * 100%;
                 }
             }
 
