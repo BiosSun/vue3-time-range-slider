@@ -148,8 +148,8 @@ const limit = $computed(() => {
 })
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', v: Range | undefined): void
-    (e: 'change', v: Range | undefined): void
+    (e: 'update:modelValue', v: [Date, Date] | []): void
+    (e: 'change', v: [Date, Date] | []): void
     (e: 'startPicking', v: Range | undefined): void
     (e: 'picking', v: Range | undefined): void
     (e: 'endPicking', v: Range | undefined): void
@@ -166,7 +166,9 @@ const leftInput = reactive({
     setValue(value: Date | undefined) {
         leftInput.value = value
         leftInput.outputValue = clampTime(value, undefined, 'floor')
-        rightInput.outputValue = clampTime(rightInput.value, leftInput.outputValue, 'floor')
+        rightInput.outputValue = leftInput.outputValue
+            ? clampTime(rightInput.value, leftInput.outputValue, 'floor')
+            : undefined
     },
     onChange(value: Date | undefined) {
         leftInput.setValue(value)
@@ -182,7 +184,9 @@ const rightInput = reactive({
     setValue(value: Date | undefined) {
         rightInput.value = value
         rightInput.outputValue = clampTime(value, undefined, 'floor')
-        leftInput.outputValue = clampTime(leftInput.value, rightInput.outputValue, 'floor')
+        leftInput.outputValue = rightInput.outputValue
+            ? clampTime(leftInput.value, rightInput.outputValue, 'floor')
+            : undefined
     },
     onChange(value: Date | undefined) {
         rightInput.setValue(value)
@@ -770,8 +774,9 @@ function emitEndPicking(range: Range) {
 }
 
 function emitChange(range: Range) {
-    emit('update:modelValue', range)
-    emit('change', normalizeRange(range))
+    const outputRange = isFullRange(range) ? normalizeRange(range) as [Date, Date] : [] as []
+    emit('update:modelValue', outputRange)
+    emit('change', outputRange)
 }
 
 // Tools
