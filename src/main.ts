@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
-import App from './App.vue'
+import DevApp from './App.dev.vue'
+import SiteApp from './App.site.vue'
 import { format } from 'date-fns'
 
 Date.prototype.toJSON = function () {
@@ -10,4 +11,4 @@ Date.prototype.toJSON = function () {
     }
 }
 
-createApp(App).mount('#app')
+createApp(import.meta.env.MODE === 'site' ? SiteApp : DevApp).mount('#app')
