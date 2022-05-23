@@ -38,6 +38,8 @@ export default defineConfig(({ mode }) => {
 
             break
         case 'site':
+            config.base = '/vue3-time-range-slider/';
+
             config.build = {
                 outDir: 'site',
             }
