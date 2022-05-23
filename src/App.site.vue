@@ -2,6 +2,10 @@
 import TimeRangeSlider from './components/time-range-slider'
 import { subMonths, subHours, subMinutes } from 'date-fns'
 
+const debug = new URL(window.location.href).searchParams.get('debug') === '1'
+
+const visible = $ref(true)
+
 const max = new Date()
 const min = subMonths(max, 3)
 
@@ -19,7 +23,12 @@ const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7
             &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
         </h1>
 
+        <div v-if="debug" class="debug">
+            <button @click="visible = !visible">toggle visible</button>
+        </div>
+
         <TimeRangeSlider
+            v-if="visible"
             class="slider"
             v-model="modelValue"
             step="minute"
@@ -45,6 +54,10 @@ const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7
     overflow: hidden;
     font-size: 34px;
     margin-bottom: 40px;
+}
+
+.debug {
+    margin: 40px 0;
 }
 
 .slider {
