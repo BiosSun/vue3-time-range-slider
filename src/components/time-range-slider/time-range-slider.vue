@@ -41,6 +41,7 @@
                         :hintTime="item.hintTime"
                         :hintTimeLine="item.hintTimeLine"
                         @mousedown="slider.onItemMouseDown"
+                        @dblclick="slider.onItemDoubleClick"
                     />
                 </div>
             </div>
@@ -276,7 +277,7 @@ function roundTimeByGranularity(time: Date, granularity: Granularity) {
 }
 
 type SliderState = 'WAIT' | 'LEFT_PICKING' | 'LEFT_PICKED' | 'RIGHT_PICKING'
-type SliderAction = 'picking' | 'picked'
+type SliderAction = 'picking' | 'picked' | 'pickAllDay'
 
 const sliderContainer: HTMLElement = $ref()
 const sliderList: HTMLElement = $ref()
@@ -346,6 +347,23 @@ const slider = reactive({
             picked() {
                 // 有时用户会在其它地方按下鼠标，并在 SliderBar 组件上释放，此时会触发 picked 事件，这种情况直接忽略即可。
             },
+
+            // 用户双击 slider item：
+            pickAllDay(time: Date) {
+                if (!isValidTime(time)) {
+                    return
+                }
+
+                const startTime = clampTime(startOfDay(time), undefined, 'floor')
+                const endTime = clampTime(endOfDay(time), startTime, 'floor')
+
+                if (
+                    slider.setRangePoint('left', startTime) &&
+                    slider.setRangePoint('right', endTime)
+                ) {
+                    slider.syncToInput()
+                }
+            },
         },
 
         LEFT_PICKING: {
@@ -371,6 +389,10 @@ const slider = reactive({
                 if (isFullRange(slider.range)) {
                     return 'LEFT_PICKED'
                 }
+            },
+
+            pickAllDay() {
+                // 不支持在该状态下响应 pickAllDay 事件
             },
         },
 
@@ -398,6 +420,10 @@ const slider = reactive({
                 emitChange(slider.range as Range) // WAIT
                 return 'WAIT'
             },
+
+            pickAllDay() {
+                // 不支持在该状态下响应 pickAllDay 事件
+            },
         },
 
         RIGHT_PICKING: {
@@ -420,6 +446,10 @@ const slider = reactive({
                 emitEndPicking(slider.range)
                 emitChange(slider.range as Range) // WAIT
                 return 'WAIT'
+            },
+
+            pickAllDay() {
+                // 不支持在该状态下响应 pickAllDay 事件
             },
         },
     } as {
@@ -475,6 +505,10 @@ const slider = reactive({
         slider.dispatch('picked', time, event)
     },
 
+    onPickAllDay(time: Date, event: MouseEvent) {
+        slider.dispatch('pickAllDay', time, event)
+    },
+
     onListMouseMove(event: MouseEvent) {
         if (slider.activated) {
             return
@@ -511,6 +545,10 @@ const slider = reactive({
 
         slider.updateItemSize(event.currentTarget as Element)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
+    },
+
+    onItemDoubleClick(event: MouseEvent) {
+        slider.onPickAllDay(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseMove(event: MouseEvent) {
