@@ -2,8 +2,6 @@
 
 <img src="./screenshot.png" title="Component Screenshot" alt="Component Screenshot" width="613" />
 
-<br />
-
 该组件可以让用户在一个有限的时间范围内，非常方便地选取一个时间区间；基于 Vue 3 开发。
 
 ## 属性
