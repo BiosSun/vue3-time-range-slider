@@ -15,12 +15,12 @@
     "bugs": "https://github.com/biossun/vue3-time-range-slider/issues",
     "author": "Bios Sun <biossun@gmail.com>",
     "license": "MIT",
-    "main": "./dist/index.umd.js",
-    "module": "./dist/index.es.js",
+    "main": "./lib/index.umd.js",
+    "module": "./lib/index.es.js",
     "exports": {
         ".": {
-            "import": "./dist/index.es.js",
-            "require": "./dist/index.umd.js"
+            "import": "./lib/index.es.js",
+            "require": "./lib/index.umd.js"
         }
     },
     "scripts": {
