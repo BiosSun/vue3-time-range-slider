@@ -149,18 +149,17 @@ $b: time-range-slider;
             bottom: 0;
             left: calc(100% * var(--start));
             right: calc(100% - 100% * var(--end));
+            pointer-events: none;
         }
 
         &__disabled-rail {
             @extend %rail;
             background: rgb(0 9 25 / 8%);
-            pointer-events: none;
         }
 
         &__rail {
             @extend %rail;
             background: #00aaff30;
-            pointer-events: none;
         }
 
         &__point,
