@@ -1,0 +1,10 @@
+*.local
+src
+site
+.env*
+index.html
+screenshot.png
+tsconfig*.json
+vite.config.ts
+yarn.lock
+.vscode
