@@ -27,13 +27,15 @@
             "require": "./lib/style.css"
         }
     },
+    "types": "./lib-types/index.d.ts",
     "scripts": {
         "dev": "vite",
         "preview": "vite preview",
         "build:site": "vue-tsc --noEmit && vite build --mode site",
         "build:lib": "vue-tsc --noEmit && vite build --mode lib",
+        "build:type": "vue-tsc --project tsconfig.lib.json",
         "publish:site": "gh-pages -d site",
-        "prepublishOnly": "npm run build:lib && npm run build:site && npm run publish:site"
+        "prepublishOnly": "npm run build:lib && npm run build:type && npm run build:site && npm run publish:site"
     },
     "peerDependencies": {
         "vue": "^3.2.25"

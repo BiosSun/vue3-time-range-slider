@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "isolatedModules": false,
+        "declarationDir": "./lib-types",
+    },
+    "include": [
+        "src/env.d.ts",
+        "src/components/time-range-slider/**/*.ts",
+        "src/components/time-range-slider/**/*.d.ts",
+        "src/components/time-range-slider/**/*.tsx",
+        "src/components/time-range-slider/**/*.vue"
+    ]
+}
