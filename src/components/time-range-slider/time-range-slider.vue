@@ -505,7 +505,7 @@ const slider = reactive({
         slider.dispatch('picked', time, event)
     },
 
-    onPickAllDay(time: Date, event: MouseEvent) {
+    onPickAllDay(time: Date | undefined, event: MouseEvent) {
         slider.dispatch('pickAllDay', time, event)
     },
 
@@ -597,6 +597,10 @@ const slider = reactive({
     },
 
     getTimeByMouseEvent({ clientX, clientY, shiftKey }: MouseEvent) {
+        if (!sliderContainer) {
+            return undefined
+        }
+
         const { itemWidth, itemHeight, dates } = slider
 
         const containerRect = sliderContainer.getBoundingClientRect()
@@ -635,7 +639,9 @@ const slider = reactive({
     },
 
     updateScrollBarWidth() {
-        slider.scrollBarWidth = sliderContainer.offsetWidth - sliderContainer.clientWidth
+        if (sliderContainer) {
+            slider.scrollBarWidth = sliderContainer.offsetWidth - sliderContainer.clientWidth
+        }
     },
 
     async scrollIntoChangedPointIfNeeded(originalRange: Range, newRange: Range) {
