@@ -60,6 +60,7 @@ $b: time-range-slider;
 
         font-size: 12px;
         line-height: 12px;
+        white-space: nowrap;
 
         pointer-events: none;
 
@@ -133,6 +134,7 @@ $b: time-range-slider;
             line-height: 22px;
             user-select: none;
             pointer-events: none;
+            white-space: nowrap;
         }
 
         &__date {
