@@ -21,6 +21,10 @@
         ".": {
             "import": "./lib/index.es.js",
             "require": "./lib/index.umd.js"
+        },
+        "./style.css": {
+            "import": "./lib/style.css",
+            "require": "./lib/style.css"
         }
     },
     "scripts": {
