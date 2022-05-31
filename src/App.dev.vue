@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { addHours } from 'date-fns'
 import TimeRangeSlider from './components/time-range-slider'
+import SliderBar from './components/time-range-slider/slider-bar.vue'
+import DateTimeInput from './components/time-range-slider/date-time-input.vue'
 import { SliderStep } from './components/time-range-slider/util'
-import DateTimeInput from './dev.date-time-input.vue'
+import DateTimeInputTool from './dev.date-time-input.vue'
 
 let visible: boolean = $ref(true)
 let step: SliderStep = $ref('second')
@@ -61,8 +63,8 @@ const sliderStep: SliderStep = $ref('second')
 
 <template>
     <div class="content">
-        <DateTimeInput label="start" v-model="timeRange[0]" />&nbsp;
-        <DateTimeInput label="end" v-model="timeRange[1]" /><br />
+        <DateTimeInputTool label="start" v-model="timeRange[0]" />&nbsp;
+        <DateTimeInputTool label="end" v-model="timeRange[1]" /><br />
         <button @click="timeRange = [undefined, undefined]">clean all</button>&nbsp;
         <!-- prettier-ignore -->
         {{ ( { modelValue: timeRange } ) }}
@@ -75,8 +77,8 @@ const sliderStep: SliderStep = $ref('second')
 
         <br />
 
-        <DateTimeInput label="min" v-model="sliderMin" />&nbsp;
-        <DateTimeInput label="min" v-model="sliderMax" />
+        <DateTimeInputTool label="min" v-model="sliderMin" />&nbsp;
+        <DateTimeInputTool label="min" v-model="sliderMax" />
 
         <br />
 
@@ -117,14 +119,14 @@ const sliderStep: SliderStep = $ref('second')
 
         <br />
 
-        <DateTimeInput label="time" v-model="dateTimeInputValue" />&nbsp;
+        <DateTimeInputTool label="time" v-model="dateTimeInputValue" />&nbsp;
         <!-- prettier-ignore -->
         {{ ( { modelValue: dateTimeInputValue } ) }}
 
         <br />
 
-        <DateTimeInput label="min" v-model="inputMin" />&nbsp;
-        <DateTimeInput label="min" v-model="inputMax" />
+        <DateTimeInputTool label="min" v-model="inputMin" />&nbsp;
+        <DateTimeInputTool label="min" v-model="inputMax" />
 
         <br />
 
@@ -141,7 +143,7 @@ const sliderStep: SliderStep = $ref('second')
         <br />
         <br />
 
-        <TimeRangeSlider.DateTimeInput
+        <DateTimeInput
             v-model="dateTimeInputValue"
             :min="inputMin"
             :max="inputMax"
@@ -169,7 +171,7 @@ const sliderStep: SliderStep = $ref('second')
         <hr />
 
         <h2>timeRange: [undefined, undefined]</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[undefined, undefined]"
             :step="sliderStep"
@@ -177,7 +179,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>timeRange: [2022-01-05 12:00, undefined]</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), undefined]"
             :step="sliderStep"
@@ -185,7 +187,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>timeRange: [undefined, 2022-01-05 12:00]</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[undefined, new Date(2022, 0, 5, 12)]"
             :step="sliderStep"
@@ -193,7 +195,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>timeRange: [2022-01-05 12:00, 2022-01-05 23:59]</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :step="sliderStep"
@@ -201,7 +203,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>timeRange: [2022-01-05 23:59, 2022-01-05 12:00]</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 23, 59), new Date(2022, 0, 5, 12)]"
             :step="sliderStep"
@@ -209,7 +211,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>min: 2022-01-05 08:30:29, max: undefined</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :min="new Date(2022, 0, 5, 8, 30, 29)"
@@ -218,7 +220,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>min: undefined, max: 2022-01-05 23:09:56</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :max="new Date(2022, 0, 5, 23, 9, 56)"
@@ -227,7 +229,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>min: 2022-01-05 08:30:29, max: 2022-01-05 23:09:56</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :min="new Date(2022, 0, 5, 8, 30, 29)"
@@ -237,7 +239,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>hintTime: undefined</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :hintTime="undefined"
@@ -246,7 +248,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>hintTime: 2022-01-06 15:24:00</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :hintTime="new Date(2022, 0, 6, 15, 24, 0)"
@@ -255,7 +257,7 @@ const sliderStep: SliderStep = $ref('second')
         />
 
         <h2>hintTime: 2022-01-05 08:30:29</h2>
-        <TimeRangeSlider.SliderBar
+        <SliderBar
             :date="new Date(2022, 0, 5)"
             :timeRange="[new Date(2022, 0, 5, 12), new Date(2022, 0, 5, 23, 59)]"
             :hintTime="new Date(2022, 0, 5, 8, 30, 29)"
