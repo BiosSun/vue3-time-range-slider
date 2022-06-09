@@ -301,6 +301,7 @@ const slider = reactive({
 
     initialClientX: 0,
     initialClientY: 0,
+    initialTimeStamp: 0,
     isMoving: false,
 
     scrollActionId: 0,
@@ -392,15 +393,8 @@ const slider = reactive({
                 }
             },
 
-            // 用户松开鼠标（DONE）：
             picked() {
-                emitEndPicking(slider.range)
-                emitChange(slider.range as Range) // WAIT
-                return 'WAIT'
-            },
-
-            pickAllDay() {
-                // 不支持在该状态下响应 pickAllDay 事件
+                // 无需处理
             },
         },
 
@@ -421,6 +415,23 @@ const slider = reactive({
 
             // 用户松开鼠标（DONE）：
             picked() {
+                // 判断是否是双击
+                if (!slider.isMoving && Date.now() - slider.initialTimeStamp < 430) {
+                    const time = slider.left
+
+                    if (isValidTime(time)) {
+                        const startTime = clampTime(startOfDay(time), undefined, 'floor')
+                        const endTime = clampTime(endOfDay(time), startTime, 'floor')
+
+                        if (
+                            slider.setRangePoint('left', startTime) &&
+                            slider.setRangePoint('right', endTime)
+                        ) {
+                            slider.syncToInput()
+                        }
+                    }
+                }
+
                 emitEndPicking(slider.range)
                 emitChange(slider.range as Range) // WAIT
                 return 'WAIT'
@@ -499,26 +510,17 @@ const slider = reactive({
     },
 
     onItemMouseDown(event: MouseEvent) {
-        // NOTE:
-        // 这里当 slider 为 activated 状态时，若其 state 依然为 LEFT_PICKED，则仍然触发 picking 事件，
-        // 这是因为当处于 LEFT_PICKED 状态时，只有通过触发 picking 事件才会切换到 RIGHT_PICKING 状态，
-        // 而若不作该处理，那么将只会在 onDocumentMouseMove 触发时才会触发 picking 事件，
-        // 如此一来，用户将无法通过连点两次以便仅选中一个 step 长度（秒/分钟/小时）的时间区间时，
-        // 我认为这对用户体验将是一个极大的损失。
-        if (slider.activated && slider.state !== 'LEFT_PICKED') {
+        if (slider.activated) {
             return
         }
 
         slider.initialClientX = event.clientX
         slider.initialClientY = event.clientY
+        slider.initialTimeStamp = Date.now()
         slider.isMoving = false
 
         slider.updateItemSize(event.currentTarget as Element)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
-    },
-
-    onItemDoubleClick(event: MouseEvent) {
-        slider.onPickAllDay(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseMove(event: MouseEvent) {
@@ -538,11 +540,11 @@ const slider = reactive({
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
-    onDocumentMouseUp(event: MouseEvent) {
-        slider.initialClientX = 0
-        slider.initialClientY = 0
-        slider.isMoving = false
+    onDocumentMouseDown(event: MouseEvent) {
+        slider.onPicking(slider.getTimeByMouseEvent(event), event)
+    },
 
+    onDocumentMouseUp(event: MouseEvent) {
         slider.onPicked(slider.getTimeByMouseEvent(event), event)
     },
 
@@ -550,10 +552,23 @@ const slider = reactive({
         slider.activated = true
         document.addEventListener('mousemove', slider.onDocumentMouseMove, false)
         document.addEventListener('mouseup', slider.onDocumentMouseUp, false)
+        // NOTE
+        // 这里使用 setTimeout 是因为该 activate 方法是因为用户点击面板项而被调用的，此时若在 document 绑定
+        // 点击事件，那么 onDocumentMouseDown 回调将会立即触发（因为冒泡），这将会导致连续触发两次 picking，
+        // 为了避免这种情况，因此才加了一点延迟。
+        setTimeout(() => {
+            document.addEventListener('mousedown', slider.onDocumentMouseDown, false)
+        })
     },
 
     inactivate() {
+        slider.initialClientX = 0
+        slider.initialClientY = 0
+        slider.initialTimeStamp = 0
+        slider.isMoving = false
+
         document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
+        document.removeEventListener('mousedown', slider.onDocumentMouseDown, false)
         document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
 
         // NOTE
