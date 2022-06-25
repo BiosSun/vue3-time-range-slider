@@ -477,7 +477,7 @@ const slider = reactive({
     },
 
     syncToInput() {
-        resetInputValue(slider.range)
+        resetInputValue(normalizeRange(slider.range))
     },
 
     // 必须确保在触发 picking 或 picked 事件时，time 不能是 undefined
