@@ -753,21 +753,22 @@ const sliderItems = $computed(() => {
 // 与外部进行状态同步
 // -----------------------------------------------------------------------------
 
-// NOTE: 若是由于用户在组件内选取或输入时间而导致的 modelValue 改变，那么 sliderActivated 和 inputFocused 状态
-//       的改变都是在 modelValue 之后的，这一点确保了 slider 和 input 不会因为 watch 重复触发而被强制设置值。
-//       （若这一点无法保证，那么 sliderActivated 或 inputFocused 状态改变时会触发一次 watch，此时由于 modelValue
-//         没有改变，slider 和 input 中的时间区间肯定不会和 modelValue 一样，所以它们会被强行设置为 modelValue，
-//         紧接着 modelValue 改变又一次触发 watch，slider 和 input 会再被设置为新的 modelValue 的值）
+// 同步外部状态的改变。
+// 但当用户正在 slider 面板中选取时间时，则等到选取操作结束之后再进行同步。
+// NOTE: 若是由于用户在组件内选取或输入时间而导致的 modelValue 改变（即在 update:modelValue 事件触发时，同步修改并使用事件所传入的参数值），
+//       那么 sliderActivated 和 inputFocused 状态会在 modelValue 属性更新之后再切换为 false，
+//       这一点确保了 slider 和 input 不会因为 watch 重复触发而被强制设置值。
+//       （若这一点无法保证，那么 sliderActivated 状态切换时会触发一次 watch，
+//          此时由于 modelValue 没有改变，
+//          slider 和 input 中的时间区间肯定不会和 modelValue 一样，
+//          所以它们会被强行设置为 modelValue，
+//          紧接着 modelValue 改变又一次触发 watch，
+//          slider 和 input 会再被设置为新的 modelValue 的值）
 watch(
-    [$$(modelValue), computed(() => slider.activated), $$(inputFocused)],
-    ([modelValue, sliderActivated, inputFocused]) => {
-        // 当用户正在 slider 面板中选取时间时，不响应外部的状态改变
+    [$$(modelValue), computed(() => slider.activated)],
+    ([modelValue, sliderActivated]) => {
         if (!sliderActivated) {
             modelValueToSlideRange()
-        }
-
-        // 当用户正在时间输入框中输入值时，不响应外部的状态改变
-        if (!inputFocused) {
             modelValueToInputRange()
         }
     },
