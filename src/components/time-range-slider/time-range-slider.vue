@@ -514,37 +514,24 @@ const slider = reactive({
             return
         }
 
-        slider.initialClientX = event.clientX
-        slider.initialClientY = event.clientY
-        slider.initialTimeStamp = Date.now()
-        slider.isMoving = false
-
+        slider.setMouseState(event)
         slider.updateItemSize(event.currentTarget as Element)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseMove(event: MouseEvent) {
-        if (!slider.isMoving) {
-            const moveDistance = Math.sqrt(
-                Math.abs(slider.initialClientX - event.clientX) ** 2 +
-                    Math.abs(slider.initialClientY - event.clientY) ** 2,
-            )
-
-            if (moveDistance < 4) {
-                return
-            }
-
-            slider.isMoving = true
+        if (slider.checkIsMoving(event) || event.shiftKey) {
+            slider.onPicking(slider.getTimeByMouseEvent(event), event)
         }
-
-        slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseDown(event: MouseEvent) {
+        slider.setMouseState(event)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseUp(event: MouseEvent) {
+        slider.resetMouseState()
         slider.onPicked(slider.getTimeByMouseEvent(event), event)
     },
 
@@ -562,10 +549,7 @@ const slider = reactive({
     },
 
     inactivate() {
-        slider.initialClientX = 0
-        slider.initialClientY = 0
-        slider.initialTimeStamp = 0
-        slider.isMoving = false
+        slider.resetMouseState()
 
         document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
         document.removeEventListener('mousedown', slider.onDocumentMouseDown, false)
@@ -579,6 +563,35 @@ const slider = reactive({
         nextTick(() => {
             slider.activated = false
         })
+    },
+
+    setMouseState(event: MouseEvent) {
+        slider.initialClientX = event.clientX
+        slider.initialClientY = event.clientY
+        slider.initialTimeStamp = Date.now()
+        slider.isMoving = false
+    },
+
+    checkIsMoving(event: MouseEvent): boolean {
+        if (!slider.isMoving) {
+            const moveDistance = Math.sqrt(
+                Math.abs(slider.initialClientX - event.clientX) ** 2 +
+                    Math.abs(slider.initialClientY - event.clientY) ** 2,
+            )
+
+            if (moveDistance >= 4) {
+                slider.isMoving = true
+            }
+        }
+
+        return slider.isMoving
+    },
+
+    resetMouseState() {
+        slider.initialClientX = 0
+        slider.initialClientY = 0
+        slider.initialTimeStamp = 0
+        slider.isMoving = false
     },
 
     getTimeByMouseEvent({ clientX, clientY, shiftKey }: MouseEvent) {
