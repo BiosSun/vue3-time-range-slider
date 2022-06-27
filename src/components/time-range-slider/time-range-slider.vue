@@ -64,7 +64,7 @@ import {
     startOfDay,
     differenceInDays,
 } from 'date-fns'
-import { computed, nextTick, reactive, toRaw, watch } from 'vue'
+import { computed, markRaw, nextTick, reactive, toRaw, watch } from 'vue'
 import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
 import {
@@ -89,6 +89,7 @@ import {
     getRangeDuration,
     StepInfo,
     EMPTY_RANGE,
+    calcDistance,
 } from './util'
 
 // API
@@ -301,8 +302,14 @@ const slider = reactive({
 
     initialClientX: 0,
     initialClientY: 0,
-    initialTimeStamp: 0,
     isMoving: false,
+    isDoubleClick: false,
+    mouseEventQueue: markRaw([]) as {
+        clientX: number
+        clientY: number
+        timeStamp: number
+        type: 'down' | 'up'
+    }[],
 
     scrollActionId: 0,
 
@@ -416,7 +423,7 @@ const slider = reactive({
             // 用户松开鼠标（DONE）：
             picked() {
                 // 判断是否是双击
-                if (!slider.isMoving && Date.now() - slider.initialTimeStamp < 430) {
+                if (slider.isDoubleClick) {
                     const time = slider.left
 
                     if (isValidTime(time)) {
@@ -514,24 +521,25 @@ const slider = reactive({
             return
         }
 
-        slider.setMouseState(event)
         slider.updateItemSize(event.currentTarget as Element)
+        slider.onMouseDown(event)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseMove(event: MouseEvent) {
-        if (slider.checkIsMoving(event) || event.shiftKey) {
+        slider.onMouseMove(event)
+        if (slider.isMoving || event.shiftKey) {
             slider.onPicking(slider.getTimeByMouseEvent(event), event)
         }
     },
 
     onDocumentMouseDown(event: MouseEvent) {
-        slider.setMouseState(event)
+        slider.onMouseDown(event)
         slider.onPicking(slider.getTimeByMouseEvent(event), event)
     },
 
     onDocumentMouseUp(event: MouseEvent) {
-        slider.resetMouseState()
+        slider.onMouseUp(event)
         slider.onPicked(slider.getTimeByMouseEvent(event), event)
     },
 
@@ -549,8 +557,6 @@ const slider = reactive({
     },
 
     inactivate() {
-        slider.resetMouseState()
-
         document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
         document.removeEventListener('mousedown', slider.onDocumentMouseDown, false)
         document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
@@ -565,33 +571,60 @@ const slider = reactive({
         })
     },
 
-    setMouseState(event: MouseEvent) {
+    onMouseDown(event: MouseEvent) {
         slider.initialClientX = event.clientX
         slider.initialClientY = event.clientY
-        slider.initialTimeStamp = Date.now()
         slider.isMoving = false
+        slider.pushMouseEvent(event, 'down')
     },
 
-    checkIsMoving(event: MouseEvent): boolean {
+    onMouseUp(event: MouseEvent) {
+        slider.initialClientX = 0
+        slider.initialClientY = 0
+        slider.isMoving = false
+        slider.pushMouseEvent(event, 'up')
+        slider.checkIsDoubleClick()
+    },
+
+    onMouseMove(event: MouseEvent) {
         if (!slider.isMoving) {
-            const moveDistance = Math.sqrt(
-                Math.abs(slider.initialClientX - event.clientX) ** 2 +
-                    Math.abs(slider.initialClientY - event.clientY) ** 2,
+            const moveDistance = calcDistance(
+                slider.initialClientX,
+                slider.initialClientY,
+                event.clientX,
+                event.clientY,
             )
 
             if (moveDistance >= 4) {
                 slider.isMoving = true
             }
         }
-
-        return slider.isMoving
     },
 
-    resetMouseState() {
-        slider.initialClientX = 0
-        slider.initialClientY = 0
-        slider.initialTimeStamp = 0
-        slider.isMoving = false
+    checkIsDoubleClick() {
+        const [a, b, c, d] = slider.mouseEventQueue
+        slider.isDoubleClick =
+            a?.type === 'down' &&
+            b?.type === 'up' &&
+            c?.type === 'down' &&
+            d?.type === 'up' &&
+            d.timeStamp - a.timeStamp < 430 &&
+            calcDistance(d.clientX, d.clientY, c.clientX, c.clientY) < 4 &&
+            calcDistance(d.clientX, d.clientY, b.clientX, b.clientY) < 4 &&
+            calcDistance(d.clientX, d.clientY, a.clientX, a.clientY) < 4
+    },
+
+    pushMouseEvent({ clientX, clientY, timeStamp }: MouseEvent, type: 'down' | 'up') {
+        slider.mouseEventQueue.push({
+            clientX,
+            clientY,
+            timeStamp,
+            type,
+        })
+
+        if (slider.mouseEventQueue.length === 5) {
+            slider.mouseEventQueue.shift()
+        }
     },
 
     getTimeByMouseEvent({ clientX, clientY, shiftKey }: MouseEvent) {

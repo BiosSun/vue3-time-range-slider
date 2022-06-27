@@ -361,3 +361,8 @@ export function assert(condition: unknown, message?: string): asserts condition 
 export function detectLeftButton(event: MouseEvent) {
     return !!(event.buttons & 0b1)
 }
+
+/** 计算两点之间的距离 */
+export function calcDistance(x1: number, y1: number, x2: number, y2: number) {
+    return Math.sqrt(Math.abs(x1 - x2) ** 2 + Math.abs(y1 - y2) ** 2)
+}
