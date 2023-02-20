@@ -108,7 +108,7 @@ $b: time-range-slider;
     &__slider {
         position: relative;
         box-sizing: border-box;
-        height: var(--time-range-slider__slider--height, 36px);
+        height: var(--#{$b}__slider--height, 36px);
         border-top: 1px solid rgb(0 9 25 / 25%);
 
         contain: strict;
@@ -168,8 +168,9 @@ $b: time-range-slider;
             position: absolute;
             top: 0;
             bottom: 0;
-            left: calc(100% * var(--position) - 2px * var(--position));
-            width: 2px;
+            left: calc(100% * var(--position) - var(--#{$b}__slider__point--width, 2px) * var(--position));
+            width: var(--#{$b}__slider__point--width, 2px);
+            pointer-events: none;
         }
 
         &__point {
@@ -177,6 +178,7 @@ $b: time-range-slider;
         }
 
         &__hint-time-line {
+            width: var(--#{$b}__slider__hit-time-line--width, var(--#{$b}__slider__point--width, 2px));
             background: rgb(0 9 25 / 25%);
         }
     }
