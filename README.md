@@ -4,6 +4,37 @@
 
 该组件可以让用户在一个有限的时间范围内，非常方便地选取一个时间区间；基于 Vue 3 开发。
 
+## 使用
+
+安装：
+
+```bash
+# npm
+npm install vue3-time-range-slider
+# pnpm
+pnpm install vue3-time-range-slider
+# yarn
+yarn add vue3-time-range-slider
+```
+
+使用：
+
+```html
+<template>
+    <TimeRangeSlider v-model="sliderValue" :max="max" :min="min" step="minute" :limit="limit" />
+</template>
+<script lang="ts" setup>
+import TimeRangeSlider from 'vue3-time-range-slider'
+import 'vue3-time-range-slider/style.css'
+
+const min = new Date(2023, 0, 1, 8, 0) // 2023-01-01 08:00
+const max = new Date(2023, 0, 31, 17, 59) // 2023-01-31 17:59
+const limit = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+const sliderValue = ref<[Date, Date] | undefined>(undefined)
+</script>
+```
+
 ## 属性
 
 | 属性       | 描述                                       | 类型                                                  | 默认值     |
