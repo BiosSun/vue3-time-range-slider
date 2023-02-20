@@ -54,6 +54,13 @@ export function isLateTime(t1: Date | undefined, t2: Date | undefined): boolean 
     return !!(t1 && t2 && t1.valueOf() > t2.valueOf())
 }
 
+/** 对比两个时间的大小，undefined 和无效时间等同于负无穷 */
+export function compareTime(t1: Date | undefined, t2: Date | undefined): -1 | 0 | 1 {
+    const t1n = isValidTime(t1) ? t1.valueOf() : -Infinity
+    const t2n = isValidTime(t2) ? t2.valueOf() : -Infinity
+    return t1n === t2n ? 0 : t1n < t2n ? -1 : 1
+}
+
 export function mergeDateAndTime(date: Date | undefined, time: Date | undefined) {
     try {
         const dateTime = addMilliseconds(startOfDay(date!), millisecondsOfDayStart(time!))
@@ -178,6 +185,9 @@ export const STEP_INFOS: { [key in SliderStep]: StepInfo } = {
  */
 export type Range = (Date | undefined)[]
 
+export type PointFixedSide = 'left' | 'right'
+export type PointRelativeSide = 'start' | 'end'
+
 export const EMPTY_RANGE: Range = Object.freeze([undefined, undefined]) as any
 
 export function isValidRange(range: any): range is Range {
@@ -208,7 +218,7 @@ export function diffRange(r1: Range, r2: Range): { start: boolean; end: boolean 
     }
 }
 
-export function checkMovedPoint(r1: Range, r2: Range): 'start' | 'end' | undefined {
+export function checkMovedPoint(r1: Range, r2: Range): PointRelativeSide | undefined {
     let [r1l, r1r] = r1
     let [r2l, r2r] = r2
 
@@ -283,12 +293,16 @@ export function ensureSameDirection(r1: Range, r2: Range): Range {
     return isSameDirection ? r1 : [r1[1], r1[0]]
 }
 
-export function getStartPoint(range: Range): Date | undefined {
-    return !range[0] ? range[1] : !range[1] ? range[0] : range[0] <= range[1] ? range[0] : range[1]
+export function getStartPoint(range: Range): { time: Date | undefined; side: PointFixedSide } {
+    return compareTime(range[0], range[1]) <= 0
+        ? { time: range[0], side: 'left' }
+        : { time: range[1], side: 'right' }
 }
 
-export function getEndPoint(range: Range | undefined): Date | undefined {
-    return isFullRange(range) ? maxDate(range) : undefined
+export function getEndPoint(range: Range): { time: Date | undefined; side: PointFixedSide } {
+    return getStartPoint(range).side === 'left'
+        ? { time: range[1], side: 'right' }
+        : { time: range[0], side: 'left' }
 }
 
 export function getLeftPoint(range: Range | undefined): Date | undefined {
@@ -297,17 +311,6 @@ export function getLeftPoint(range: Range | undefined): Date | undefined {
 
 export function getRightPoint(range: Range | undefined): Date | undefined {
     return range?.[1]
-}
-
-export function rangeToInterval(range: Range): Interval | undefined {
-    if (!isValidRange(range)) {
-        return undefined
-    }
-
-    return {
-        start: getStartPoint(range)!,
-        end: getEndPoint(range)!,
-    }
 }
 
 export function getRangeDuration(range: Range, step: StepInfo): number {

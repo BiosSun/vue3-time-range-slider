@@ -112,6 +112,7 @@ $b: time-range-slider;
         border-top: 1px solid rgb(0 9 25 / 25%);
 
         contain: strict;
+        cursor: text;
 
         // 隐藏第一个元素的上边框
         &:first-child {
@@ -168,17 +169,40 @@ $b: time-range-slider;
             position: absolute;
             top: 0;
             bottom: 0;
-            left: calc(100% * var(--position) - var(--#{$b}__slider__point--width, 2px) * var(--position));
+            left: calc(
+                100% * var(--position) - var(--#{$b}__slider__point--width, 2px) * var(--position)
+            );
             width: var(--#{$b}__slider__point--width, 2px);
             pointer-events: none;
         }
 
         &__point {
             background: #00aaff;
+
+            &__resizer {
+                box-sizing: border-box;
+                width: 6px;
+                min-height: 12px;
+                height: 30%;
+
+                position: absolute;
+                left: calc((6px - var(--#{$b}__slider__point--width, 2px)) * -0.5);
+                bottom: 0;
+
+                border: 1px solid #fff;
+                border-bottom: 0;
+                background: #868e96;
+
+                cursor: ew-resize;
+                pointer-events: all;
+            }
         }
 
         &__hint-time-line {
-            width: var(--#{$b}__slider__hit-time-line--width, var(--#{$b}__slider__point--width, 2px));
+            width: var(
+                --#{$b}__slider__hit-time-line--width,
+                var(--#{$b}__slider__point--width, 2px)
+            );
             background: rgb(0 9 25 / 25%);
         }
     }
@@ -219,5 +243,12 @@ $b: time-range-slider;
         height: 100%;
         overflow: auto;
         scroll-behavior: smooth;
+
+        &[data-state='LEFT_MOVING'],
+        &[data-state='RIGHT_MOVING'] {
+            .#{$b}__slider {
+                cursor: ew-resize;
+            }
+        }
     }
 }

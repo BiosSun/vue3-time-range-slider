@@ -12,39 +12,6 @@
 
         <TimeRuler />
 
-        <div
-            v-if="activatedRange.track"
-            class="time-range-slider__slider__rail"
-            :style="{
-                '--start': activatedRange.track.start,
-                '--end': activatedRange.track.end,
-            }"
-        />
-
-        <div
-            v-if="activatedRange.start"
-            class="time-range-slider__slider__point"
-            :style="{
-                '--position': activatedRange.start.position,
-            }"
-        />
-
-        <div
-            v-if="activatedRange.end"
-            class="time-range-slider__slider__point"
-            :style="{
-                '--position': activatedRange.end.position,
-            }"
-        />
-
-        <div
-            v-if="hintTimeLinePosition !== undefined"
-            class="time-range-slider__slider__hint-time-line"
-            :style="{
-                '--position': hintTimeLinePosition,
-            }"
-        />
-
         <div class="time-range-slider__slider__date" ref="dateEl">
             <template v-if="isWeekend">
                 {{ dateStrFirstPart
@@ -56,6 +23,33 @@
                 {{ dateStrFirstPart + dateStrSecondPart }}
             </template>
         </div>
+
+        <div
+            v-if="activatedRange.track"
+            class="time-range-slider__slider__rail"
+            :style="{
+                '--start': activatedRange.track.start,
+                '--end': activatedRange.track.end,
+            }"
+        />
+
+        <SliderPoint
+            v-if="activatedRange.start"
+            :side="activatedRange.start.side"
+            :position="activatedRange.start.position"
+        />
+
+        <SliderPoint
+            v-if="activatedRange.end"
+            :side="activatedRange.end.side"
+            :position="activatedRange.end.position"
+        />
+
+        <div
+            v-if="hintTimeLinePosition !== undefined"
+            class="time-range-slider__slider__hint-time-line"
+            :style="{ '--position': hintTimeLinePosition }"
+        />
 
         <div v-if="hintTimeStr" class="time-range-slider__slider__hint-time" ref="hintTimeEl">
             {{ hintTimeStr }}
@@ -80,8 +74,11 @@ import {
     STEP_INFOS,
     isValidTime,
     clamp,
+    PointRelativeSide,
+    PointFixedSide,
 } from './util'
 import TimeRuler from './time-ruler.vue'
+import SliderPoint from './slider-point.vue'
 
 const {
     date,
@@ -150,11 +147,14 @@ function updateHintTimePosition() {
 }
 
 const activatedRange: { track?: Track; start?: Thumb; end?: Thumb } = $computed(() => {
-    const startTime = step.floor(getStartPoint(timeRange))
-    const endTime = step.ceil(getEndPoint(timeRange))
+    const startPoint = getStartPoint(timeRange)
+    const endPoint = getEndPoint(timeRange)
 
-    const startThumb = buildThumb('start', startTime)
-    const endThumb = buildThumb('end', endTime)
+    const startTime = step.floor(startPoint.time)
+    const endTime = step.ceil(endPoint.time)
+
+    const startThumb = buildThumb('start', startPoint.side, startTime)
+    const endThumb = buildThumb('end', endPoint.side, endTime)
 
     const track = buildTrack(startTime, endTime)
 
@@ -189,7 +189,8 @@ interface Track {
 }
 
 interface Thumb {
-    flag: string
+    flag: PointRelativeSide
+    side: PointFixedSide
     position: number
 }
 
@@ -216,7 +217,11 @@ function buildTrack(start: Date | undefined, end: Date | undefined): Track | und
     }
 }
 
-function buildThumb(flag: string, time: Date | undefined): Thumb | undefined {
+function buildThumb(
+    flag: PointRelativeSide,
+    side: PointFixedSide,
+    time: Date | undefined,
+): Thumb | undefined {
     // 无效的时间
     if (!isValidTime(time)) {
         return undefined
@@ -231,6 +236,7 @@ function buildThumb(flag: string, time: Date | undefined): Thumb | undefined {
 
     return {
         flag,
+        side,
         position,
     }
 }

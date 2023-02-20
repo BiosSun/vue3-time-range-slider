@@ -24,7 +24,11 @@
             />
         </div>
         <div class="time-range-slider__main">
-            <div class="time-range-slider__sliders-container" ref="sliderContainer">
+            <div
+                class="time-range-slider__sliders-container"
+                ref="sliderContainer"
+                :data-state="slider.state"
+            >
                 <div
                     ref="sliderList"
                     @pointermove="slider.onListPointerMove"
@@ -65,6 +69,7 @@ import {
     differenceInDays,
 } from 'date-fns'
 import { computed, markRaw, nextTick, reactive, toRaw, watch } from 'vue'
+import { useGlobalCursorModifier } from './use-global-cursor'
 import SliderBar from './slider-bar.vue'
 import DateTimeInput from './date-time-input.vue'
 import {
@@ -90,6 +95,7 @@ import {
     StepInfo,
     EMPTY_RANGE,
     calcDistance,
+    PointFixedSide,
 } from './util'
 
 // API
@@ -276,11 +282,20 @@ function roundTimeByGranularity(time: Date, granularity: Granularity) {
     return new Date((tv - sv) / len < th ? sv : isSameDay(tv, nv) ? nv : nv - 1)
 }
 
-type SliderState = 'WAIT' | 'LEFT_PICKING' | 'LEFT_PICKED' | 'RIGHT_PICKING'
+type SliderState =
+    | 'WAIT'
+    | 'LEFT_PICKING'
+    | 'LEFT_PICKED'
+    | 'RIGHT_PICKING'
+    | 'LEFT_MOVING'
+    | 'RIGHT_MOVING'
+
 type SliderAction = 'picking' | 'picked'
 
 const sliderContainer: HTMLElement = $ref()
 const sliderList: HTMLElement = $ref()
+
+const globalCursorModifier = useGlobalCursorModifier()
 
 const slider = reactive({
     dates: computed(() => eachDayOfInterval({ start: min, end: max })),
@@ -328,6 +343,7 @@ const slider = reactive({
                 slider.inactivate()
                 slider.snapMode = SnapMode.Large
                 slider.hintTimeLine = true
+                globalCursorModifier.reset()
             },
 
             leave() {
@@ -337,17 +353,35 @@ const slider = reactive({
             },
 
             // 用户在 sliders 面板上按下鼠标：
-            picking(time: Date | undefined) {
-                const clampedTime = clampTime(time, undefined, 'near')
-                if (
-                    slider.setRangePoint('left', clampedTime) &&
-                    slider.setRangePoint('right', clampedTime)
-                ) {
-                    slider.syncToInput()
-                    slider.hintTime = clampedTime
+            picking(time: Date | undefined, event: PointerEvent) {
+                const resizer = isResizerElement(event.target)
+
+                if (resizer) {
                     emitStartPicking(slider.range)
-                    emitPicking(slider.range)
-                    return 'LEFT_PICKING'
+
+                    switch (resizer) {
+                        case 'left':
+                            slider.hintTime = slider.left;
+                            return 'LEFT_MOVING';
+                        case 'right':
+                            slider.hintTime = slider.right;
+                            return 'RIGHT_MOVING';
+                        default:
+                            throw new Error('invalid resizer');
+                    }
+                } else {
+                    const clampedTime = clampTime(time, undefined, 'near')
+
+                    if (
+                        slider.setRangePoint('left', clampedTime) &&
+                        slider.setRangePoint('right', clampedTime)
+                    ) {
+                        slider.syncToInput()
+                        slider.hintTime = clampedTime
+                        emitStartPicking(slider.range)
+                        emitPicking(slider.range)
+                        return 'LEFT_PICKING'
+                    }
                 }
             },
 
@@ -359,6 +393,7 @@ const slider = reactive({
         LEFT_PICKING: {
             enter() {
                 slider.snapMode = SnapMode.None
+                globalCursorModifier.set('text')
             },
 
             // 用户按下鼠标的同时移动鼠标：
@@ -424,19 +459,63 @@ const slider = reactive({
             picked() {
                 // 判断是否是双击
                 if (slider.isDoubleClick) {
-                    const time = slider.left
+                    slider.onDoubleClick()
+                }
 
-                    if (isValidTime(time)) {
-                        const startTime = clampTime(startOfDay(time), undefined, 'floor')
-                        const endTime = clampTime(endOfDay(time), startTime, 'floor')
+                emitEndPicking(slider.range)
+                emitChange(slider.range as Range) // WAIT
+                return 'WAIT'
+            },
+        },
 
-                        if (
-                            slider.setRangePoint('left', startTime) &&
-                            slider.setRangePoint('right', endTime)
-                        ) {
-                            slider.syncToInput()
-                        }
-                    }
+        LEFT_MOVING: {
+            enter() {
+                globalCursorModifier.set('ew-resize')
+            },
+
+            // 用户按下鼠标后继续移动：
+            picking(time: Date | undefined) {
+                const clampedTime = clampTime(time, slider.right!, 'near')
+                if (slider.setRangePoint('left', clampedTime)) {
+                    slider.syncToInput()
+                    slider.hintTime = clampedTime
+                    emitPicking(slider.range)
+                }
+            },
+
+            // 用户松开鼠标（DONE）：
+            picked() {
+                // 判断是否是双击
+                if (slider.isDoubleClick) {
+                    slider.onDoubleClick()
+                }
+
+                emitEndPicking(slider.range)
+                emitChange(slider.range as Range) // WAIT
+                return 'WAIT'
+            },
+        },
+
+        RIGHT_MOVING: {
+            enter() {
+                globalCursorModifier.set('ew-resize')
+            },
+
+            // 用户按下鼠标后继续移动：
+            picking(time: Date | undefined) {
+                const clampedTime = clampTime(time, slider.left!, 'near')
+                if (slider.setRangePoint('right', clampedTime)) {
+                    slider.syncToInput()
+                    slider.hintTime = clampedTime
+                    emitPicking(slider.range)
+                }
+            },
+
+            // 用户松开鼠标（DONE）：
+            picked() {
+                // 判断是否是双击
+                if (slider.isDoubleClick) {
+                    slider.onDoubleClick()
                 }
 
                 emitEndPicking(slider.range)
@@ -473,7 +552,7 @@ const slider = reactive({
         return true
     },
 
-    setRangePoint(point: 'left' | 'right', time: Date | undefined) {
+    setRangePoint(point: PointFixedSide, time: Date | undefined) {
         if (!isValidTime(time)) {
             return false
         }
@@ -485,6 +564,19 @@ const slider = reactive({
 
     syncToInput() {
         resetInputValue(normalizeRange(slider.range))
+    },
+
+    onDoubleClick() {
+        const time = slider.left
+
+        if (isValidTime(time)) {
+            const startTime = clampTime(startOfDay(time), undefined, 'floor')
+            const endTime = clampTime(endOfDay(time), startTime, 'floor')
+
+            if (slider.setRangePoint('left', startTime) && slider.setRangePoint('right', endTime)) {
+                slider.syncToInput()
+            }
+        }
     },
 
     // 必须确保在触发 picking 或 picked 事件时，time 不能是 undefined
@@ -504,8 +596,14 @@ const slider = reactive({
 
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
-        const time = slider.getTimeByPointerEvent(event)
-        slider.hintTime = clampTime(time, undefined, 'near')
+        const resizer = isResizerElement(event.target)
+
+        if (resizer) {
+            slider.hintTime = resizer === 'left' ? slider.left : slider.right
+        } else {
+            const time = slider.getTimeByPointerEvent(event)
+            slider.hintTime = clampTime(time, undefined, 'near')
+        }
     },
 
     onListPointerLeave() {
@@ -917,5 +1015,11 @@ function calcTimeByPosition(
     time = roundTimeByGranularity(time, granularity)
 
     return time
+}
+
+function isResizerElement(el: HTMLElement | EventTarget | null): PointFixedSide | undefined {
+    if (el instanceof HTMLElement) {
+        return el.dataset.resizer as PointFixedSide | undefined
+    }
 }
 </script>
