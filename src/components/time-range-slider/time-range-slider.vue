@@ -27,8 +27,8 @@
             <div class="time-range-slider__sliders-container" ref="sliderContainer">
                 <div
                     ref="sliderList"
-                    @mousemove="slider.onListMouseMove"
-                    @mouseleave="slider.onListMouseLeave"
+                    @pointermove="slider.onListPointerMove"
+                    @pointerleave="slider.onListPointerLeave"
                 >
                     <SliderBar
                         v-for="item of sliderItems"
@@ -40,7 +40,7 @@
                         :timeRange="item.range"
                         :hintTime="item.hintTime"
                         :hintTimeLine="item.hintTimeLine"
-                        @mousedown="slider.onItemMouseDown"
+                        @pointerdown="slider.onItemPointerDown"
                     />
                 </div>
             </div>
@@ -304,7 +304,7 @@ const slider = reactive({
     initialClientY: 0,
     isMoving: false,
     isDoubleClick: false,
-    mouseEventQueue: markRaw([]) as {
+    pointerEventQueue: markRaw([]) as {
         clientX: number
         clientY: number
         timeStamp: number
@@ -388,13 +388,13 @@ const slider = reactive({
             },
 
             // 用户选中左时间点后，移动或按下鼠标：
-            picking(time: Date | undefined, event: MouseEvent) {
+            picking(time: Date | undefined, event: PointerEvent) {
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
                     slider.hintTime = clampedTime
                     emitPicking(slider.range)
-                    if (event.type === 'mousedown') {
+                    if (event.type === 'pointerdown') {
                         return 'RIGHT_PICKING'
                     }
                 }
@@ -411,7 +411,7 @@ const slider = reactive({
             },
 
             // 用户按下鼠标后继续移动：
-            picking(time: Date | undefined, event: MouseEvent) {
+            picking(time: Date | undefined, event: PointerEvent) {
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
@@ -451,7 +451,7 @@ const slider = reactive({
         } & {
             [action in SliderAction]: (
                 time: Date | undefined,
-                event: MouseEvent,
+                event: PointerEvent,
             ) => SliderState | void
         }
     },
@@ -489,26 +489,26 @@ const slider = reactive({
 
     // 必须确保在触发 picking 或 picked 事件时，time 不能是 undefined
     // 若有 clean 操作，那么应当是一个额外的事件
-    onPicking(time: Date | undefined, event: MouseEvent) {
+    onPicking(time: Date | undefined, event: PointerEvent) {
         slider.dispatch('picking', time, event)
     },
 
-    onPicked(time: Date | undefined, event: MouseEvent) {
+    onPicked(time: Date | undefined, event: PointerEvent) {
         slider.dispatch('picked', time, event)
     },
 
-    onListMouseMove(event: MouseEvent) {
+    onListPointerMove(event: PointerEvent) {
         if (slider.activated) {
             return
         }
 
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
-        const time = slider.getTimeByMouseEvent(event)
+        const time = slider.getTimeByPointerEvent(event)
         slider.hintTime = clampTime(time, undefined, 'near')
     },
 
-    onListMouseLeave() {
+    onListPointerLeave() {
         if (slider.activated) {
             return
         }
@@ -516,50 +516,50 @@ const slider = reactive({
         slider.hintTime = undefined
     },
 
-    onItemMouseDown(event: MouseEvent) {
+    onItemPointerDown(event: PointerEvent) {
         if (slider.activated) {
             return
         }
 
         slider.updateItemSize(event.currentTarget as Element)
-        slider.onMouseDown(event)
-        slider.onPicking(slider.getTimeByMouseEvent(event), event)
+        slider.onPointerDown(event)
+        slider.onPicking(slider.getTimeByPointerEvent(event), event)
     },
 
-    onDocumentMouseMove(event: MouseEvent) {
-        slider.onMouseMove(event)
+    onDocumentPointerMove(event: PointerEvent) {
+        slider.onPointerMove(event)
         if (slider.isMoving || event.shiftKey) {
-            slider.onPicking(slider.getTimeByMouseEvent(event), event)
+            slider.onPicking(slider.getTimeByPointerEvent(event), event)
         }
     },
 
-    onDocumentMouseDown(event: MouseEvent) {
-        slider.onMouseDown(event)
-        slider.onPicking(slider.getTimeByMouseEvent(event), event)
+    onDocumentPointerDown(event: PointerEvent) {
+        slider.onPointerDown(event)
+        slider.onPicking(slider.getTimeByPointerEvent(event), event)
     },
 
-    onDocumentMouseUp(event: MouseEvent) {
-        slider.onMouseUp(event)
-        slider.onPicked(slider.getTimeByMouseEvent(event), event)
+    onDocumentPointerUp(event: PointerEvent) {
+        slider.onPointerUp(event)
+        slider.onPicked(slider.getTimeByPointerEvent(event), event)
     },
 
     activate() {
         slider.activated = true
-        document.addEventListener('mousemove', slider.onDocumentMouseMove, false)
-        document.addEventListener('mouseup', slider.onDocumentMouseUp, false)
+        document.addEventListener('pointermove', slider.onDocumentPointerMove, false)
+        document.addEventListener('pointerup', slider.onDocumentPointerUp, false)
         // NOTE
         // 这里使用 setTimeout 是因为该 activate 方法是因为用户点击面板项而被调用的，此时若在 document 绑定
-        // 点击事件，那么 onDocumentMouseDown 回调将会立即触发（因为冒泡），这将会导致连续触发两次 picking，
+        // 点击事件，那么 onDocumentPointerDown 回调将会立即触发（因为冒泡），这将会导致连续触发两次 picking，
         // 为了避免这种情况，因此才加了一点延迟。
         setTimeout(() => {
-            document.addEventListener('mousedown', slider.onDocumentMouseDown, false)
+            document.addEventListener('pointerdown', slider.onDocumentPointerDown, false)
         })
     },
 
     inactivate() {
-        document.removeEventListener('mousemove', slider.onDocumentMouseMove, false)
-        document.removeEventListener('mousedown', slider.onDocumentMouseDown, false)
-        document.removeEventListener('mouseup', slider.onDocumentMouseUp, false)
+        document.removeEventListener('pointermove', slider.onDocumentPointerMove, false)
+        document.removeEventListener('pointerdown', slider.onDocumentPointerDown, false)
+        document.removeEventListener('pointerup', slider.onDocumentPointerUp, false)
 
         // NOTE
         // 这里使用 nextTick 的原因是，当 slider 面板切换到 inactivate 状态时通常会触发 update:modelValue 事件，
@@ -571,22 +571,22 @@ const slider = reactive({
         })
     },
 
-    onMouseDown(event: MouseEvent) {
+    onPointerDown(event: PointerEvent) {
         slider.initialClientX = event.clientX
         slider.initialClientY = event.clientY
         slider.isMoving = false
-        slider.pushMouseEvent(event, 'down')
+        slider.pushPointerEvent(event, 'down')
     },
 
-    onMouseUp(event: MouseEvent) {
+    onPointerUp(event: PointerEvent) {
         slider.initialClientX = 0
         slider.initialClientY = 0
         slider.isMoving = false
-        slider.pushMouseEvent(event, 'up')
+        slider.pushPointerEvent(event, 'up')
         slider.checkIsDoubleClick()
     },
 
-    onMouseMove(event: MouseEvent) {
+    onPointerMove(event: PointerEvent) {
         if (!slider.isMoving) {
             const moveDistance = calcDistance(
                 slider.initialClientX,
@@ -602,7 +602,7 @@ const slider = reactive({
     },
 
     checkIsDoubleClick() {
-        const [a, b, c, d] = slider.mouseEventQueue
+        const [a, b, c, d] = slider.pointerEventQueue
         slider.isDoubleClick =
             a?.type === 'down' &&
             b?.type === 'up' &&
@@ -614,20 +614,20 @@ const slider = reactive({
             calcDistance(d.clientX, d.clientY, a.clientX, a.clientY) < 4
     },
 
-    pushMouseEvent({ clientX, clientY, timeStamp }: MouseEvent, type: 'down' | 'up') {
-        slider.mouseEventQueue.push({
+    pushPointerEvent({ clientX, clientY, timeStamp }: PointerEvent, type: 'down' | 'up') {
+        slider.pointerEventQueue.push({
             clientX,
             clientY,
             timeStamp,
             type,
         })
 
-        if (slider.mouseEventQueue.length === 5) {
-            slider.mouseEventQueue.shift()
+        if (slider.pointerEventQueue.length === 5) {
+            slider.pointerEventQueue.shift()
         }
     },
 
-    getTimeByMouseEvent({ clientX, clientY, shiftKey }: MouseEvent) {
+    getTimeByPointerEvent({ clientX, clientY, shiftKey }: PointerEvent) {
         if (!sliderContainer) {
             return undefined
         }
@@ -756,7 +756,7 @@ const slider = reactive({
         sliderContainer.scrollTo(0, scrollY)
     },
 
-    dispatch(action: SliderAction, time: Date | undefined, event: MouseEvent) {
+    dispatch(action: SliderAction, time: Date | undefined, event: PointerEvent) {
         const nextState = slider.ACTION_HANDLERS[slider.state][action](time, event)
         if (nextState && nextState !== slider.state) {
             slider.ACTION_HANDLERS[slider.state].leave?.()

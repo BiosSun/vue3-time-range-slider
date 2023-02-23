@@ -358,7 +358,7 @@ export function assert(condition: unknown, message?: string): asserts condition 
 }
 
 /** 检查鼠标左键是否被按下 */
-export function detectLeftButton(event: MouseEvent) {
+export function detectLeftButton(event: PointerEvent) {
     return !!(event.buttons & 0b1)
 }
 
