@@ -115,7 +115,7 @@ $b: time-range-slider;
 
         // 隐藏第一个元素的上边框
         &:first-child {
-            margin-top: -1px;
+            border-top: none;
         }
 
         > .#{$b}__ruler {

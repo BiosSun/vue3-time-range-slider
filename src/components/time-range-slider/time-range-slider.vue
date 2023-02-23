@@ -635,7 +635,7 @@ const slider = reactive({
         const { itemWidth, itemHeight, dates } = slider
 
         const containerRect = sliderContainer.getBoundingClientRect()
-        const containerY = clamp(clientY - containerRect.top, 0, containerRect.height)
+        const containerY = clamp(Math.round(clientY - containerRect.top), 0, containerRect.height)
 
         const itemIndex = clampIndex((containerY + sliderContainer.scrollTop) / itemHeight, dates.length) // prettier-ignore
         const itemX = clamp(clientX - containerRect.left, 0, itemWidth)
