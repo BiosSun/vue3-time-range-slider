@@ -275,3 +275,49 @@ const sliderStep: SliderStep = $ref('second')
         noto sans, sans-serif;
 }
 </style>
+<style>
+button {
+    box-sizing: border-box;
+    height: 26px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: #f0f1f3;
+    border: 1px solid #c0c1c3;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+button:hover {
+    background-color: #e0e1e3;
+}
+
+button:active {
+    background-color: #d0d1d3;
+}
+
+input[type='text'],
+input[type='number'],
+input[type='datetime-local'] {
+    box-sizing: border-box;
+    height: 26px;
+    border: 1px solid #c0c1c3;
+    background-color: #fff;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+input[type='text']:has(+ button),
+input[type='number']:has(+ button),
+input[type='datetime-local']:has(+ button) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+input[type='text'] + button,
+input[type='number'] + button,
+input[type='datetime-local'] + button {
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+</style>

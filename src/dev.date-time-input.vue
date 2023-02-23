@@ -3,7 +3,6 @@
         {{ label }}:
         <input
             type="datetime-local"
-            style="height: 22px"
             :value="datetimeStr"
             @change="onInputChange"
             step="1"
