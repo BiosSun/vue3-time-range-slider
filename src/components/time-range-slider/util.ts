@@ -329,6 +329,13 @@ export function getRangeDuration(range: Range, step: StepInfo): number {
     return p2.valueOf() - p1.valueOf()
 }
 
+export function getMiddleTime(range: Date[]): Date {
+    return addMilliseconds(
+        range[0],
+        differenceInMilliseconds(range[range.length - 1], range[0]) / 2,
+    )
+}
+
 // Other
 // -----------------------------------------------------------------------------
 
@@ -368,4 +375,9 @@ export function detectLeftButton(event: PointerEvent) {
 /** 计算两点之间的距离 */
 export function calcDistance(x1: number, y1: number, x2: number, y2: number) {
     return Math.sqrt(Math.abs(x1 - x2) ** 2 + Math.abs(y1 - y2) ** 2)
+}
+
+export function notNil<TValue>(value: TValue | null | undefined): value is TValue {
+    if (value === null || value === undefined) return false
+    return true
 }

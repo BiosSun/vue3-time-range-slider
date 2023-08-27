@@ -31,7 +31,9 @@
                 '--start': activatedRange.track.start,
                 '--end': activatedRange.track.end,
             }"
-        />
+        >
+            <div class="time-range-slider__slider__rail__mover" :data-mover="true" />
+        </div>
 
         <SliderPoint
             v-if="activatedRange.start"
@@ -46,13 +48,13 @@
         />
 
         <div
-            v-if="hintTimeLinePosition !== undefined"
+            v-for="position of hintTimeLinePositions"
             class="time-range-slider__slider__hint-time-line"
-            :style="{ '--position': hintTimeLinePosition }"
+            :style="{ '--position': position }"
         />
 
-        <div v-if="hintTimeStr" class="time-range-slider__slider__hint-time" ref="hintTimeEl">
-            {{ hintTimeStr }}
+        <div v-if="hintTimesStr" class="time-range-slider__slider__hint-time" ref="hintTimeEl">
+            {{ hintTimesStr }}
         </div>
     </div>
 </template>
@@ -76,23 +78,25 @@ import {
     clamp,
     PointRelativeSide,
     PointFixedSide,
+    getMiddleTime,
 } from './util'
 import TimeRuler from './time-ruler.vue'
 import SliderPoint from './slider-point.vue'
+import { formatHintTimes } from './use-hint-times'
 
 const {
     date,
     timeRange,
-    hintTime,
-    hintTimeLine,
+    hintTimes,
+    hintTimeLines,
     step: stepKey,
     min,
     max,
 } = defineProps<{
     date: Date
     timeRange: Range
-    hintTime?: Date
-    hintTimeLine?: boolean
+    hintTimes?: Date[] | undefined
+    hintTimeLines?: boolean
     step: SliderStep
     min?: Date
     max?: Date
@@ -111,9 +115,9 @@ const dateStrSecondPart = $computed(() => {
     return date.getDate().toString().padStart(2, '0')
 })
 
-const hintTimeStr = $computed(() => (hintTime ? format(hintTime, step.tf) : undefined))
-const hintTimeLinePosition = $computed(() =>
-    hintTime && hintTimeLine ? timeToPosition(hintTime) : undefined,
+const hintTimesStr = $computed(() => formatHintTimes(hintTimes, step))
+const hintTimeLinePositions = $computed(() =>
+    hintTimes && hintTimeLines ? hintTimes.map((hintTime) => timeToPosition(hintTime)) : undefined,
 )
 
 const barEl = $ref<HTMLElement | null>(null)
@@ -121,10 +125,10 @@ const dateEl = $ref<HTMLElement | null>(null)
 const hintTimeEl = $ref<HTMLElement | null>(null)
 
 onMounted(updateHintTimePosition)
-watch($$(hintTimeStr), updateHintTimePosition, { flush: 'post' })
+watch($$(hintTimesStr), updateHintTimePosition, { flush: 'post' })
 
 function updateHintTimePosition() {
-    if (!hintTimeStr) {
+    if (!hintTimesStr || !hintTimes) {
         return
     }
 
@@ -136,7 +140,7 @@ function updateHintTimePosition() {
     const hintTimeWidth = hintTimeEl.clientWidth
     const dateWidth = dateEl.clientWidth
 
-    const position = timeToPosition(hintTime!)
+    const position = timeToPosition(hintTimes.length === 1 ? hintTimes[0] : getMiddleTime(hintTimes))
     const center = barWidth * position
     const left = center - hintTimeWidth / 2
     const minLeft = 5 + dateWidth + 5

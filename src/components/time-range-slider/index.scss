@@ -162,6 +162,19 @@ $b: time-range-slider;
         &__rail {
             @extend %rail;
             background: #00aaff30;
+
+            &__mover {
+                width: 100%;
+                height: 30%;
+
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+
+                pointer-events: all;
+                cursor: grab;
+            }
         }
 
         &__point,
@@ -244,10 +257,36 @@ $b: time-range-slider;
         overflow: auto;
         scroll-behavior: smooth;
 
+        &[data-state='LEFT_PICKING'],
+        &[data-state='LEFT_PICKED'],
+        &[data-state='RIGHT_PICKING'] {
+            .#{$b}__slider {
+                &,
+                & [data-resizer],
+                & [data-mover] {
+                    cursor: text;
+                }
+            }
+        }
+
         &[data-state='LEFT_MOVING'],
         &[data-state='RIGHT_MOVING'] {
             .#{$b}__slider {
-                cursor: ew-resize;
+                &,
+                & [data-resizer],
+                & [data-mover] {
+                    cursor: ew-resize;
+                }
+            }
+        }
+
+        &[data-state='MOVING'] {
+            .#{$b}__slider {
+                &,
+                & [data-resizer],
+                & [data-mover] {
+                    cursor: grabbing;
+                }
             }
         }
     }

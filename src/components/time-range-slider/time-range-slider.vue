@@ -42,8 +42,8 @@
                         :max="max"
                         :step="stepKey"
                         :timeRange="item.range"
-                        :hintTime="item.hintTime"
-                        :hintTimeLine="item.hintTimeLine"
+                        :hintTimes="item.hintTimes"
+                        :hintTimeLines="item.hintTimeLines"
                         @pointerdown="slider.onItemPointerDown"
                     />
                 </div>
@@ -67,11 +67,9 @@ import {
     isSameDay,
     startOfDay,
     differenceInDays,
+    differenceInMilliseconds,
 } from 'date-fns'
 import { computed, markRaw, nextTick, reactive, toRaw, watch } from 'vue'
-import { useGlobalCursorModifier } from './use-global-cursor'
-import SliderBar from './slider-bar.vue'
-import DateTimeInput from './date-time-input.vue'
 import {
     Range,
     isValidTime,
@@ -96,7 +94,13 @@ import {
     EMPTY_RANGE,
     calcDistance,
     PointFixedSide,
+    getStartPoint,
+    getEndPoint,
 } from './util'
+import { useGlobalCursorModifier } from './use-global-cursor-modifier'
+import { useHintTimes } from './use-hint-times'
+import SliderBar from './slider-bar.vue'
+import DateTimeInput from './date-time-input.vue'
 
 // API
 // -----------------------------------------------------------------------------
@@ -289,6 +293,7 @@ type SliderState =
     | 'RIGHT_PICKING'
     | 'LEFT_MOVING'
     | 'RIGHT_MOVING'
+    | 'MOVING'
 
 type SliderAction = 'picking' | 'picked'
 
@@ -301,8 +306,8 @@ const slider = reactive({
     dates: computed(() => eachDayOfInterval({ start: min, end: max })),
     state: 'WAIT' as SliderState,
     range: [undefined, undefined] as Range,
-    hintTime: undefined as Date | undefined,
-    hintTimeLine: true,
+
+    hintTimes: useHintTimes(),
 
     /** 表示用户当前正在与 sliders 面板进行交互 */
     activated: false,
@@ -317,6 +322,7 @@ const slider = reactive({
 
     initialClientX: 0,
     initialClientY: 0,
+    initialTime: undefined as Date | undefined,
     isMoving: false,
     isDoubleClick: false,
     pointerEventQueue: markRaw([]) as {
@@ -327,6 +333,8 @@ const slider = reactive({
     }[],
 
     scrollActionId: 0,
+
+    movingInitialRange: [undefined, undefined] as Range,
 
     get left(): Date | undefined {
         return slider.range[0]
@@ -342,32 +350,36 @@ const slider = reactive({
             enter() {
                 slider.inactivate()
                 slider.snapMode = SnapMode.Large
-                slider.hintTimeLine = true
+                slider.hintTimes.line = true
                 globalCursorModifier.reset()
             },
 
             leave() {
                 slider.activate()
-                slider.hintTimeLine = false
+                slider.hintTimes.line = false
                 slider.updateScrollBarWidth()
             },
 
             // 用户在 sliders 面板上按下鼠标：
             picking(time: Date | undefined, event: PointerEvent) {
+                const mover = isMoverElement(event.target)
                 const resizer = isResizerElement(event.target)
 
-                if (resizer) {
+                if (mover) {
+                    emitStartPicking(slider.range)
+                    return 'MOVING'
+                } else if (resizer) {
                     emitStartPicking(slider.range)
 
                     switch (resizer) {
                         case 'left':
-                            slider.hintTime = slider.left;
-                            return 'LEFT_MOVING';
+                            slider.hintTimes.set(slider.left)
+                            return 'LEFT_MOVING'
                         case 'right':
-                            slider.hintTime = slider.right;
-                            return 'RIGHT_MOVING';
+                            slider.hintTimes.set(slider.right)
+                            return 'RIGHT_MOVING'
                         default:
-                            throw new Error('invalid resizer');
+                            throw new Error('invalid resizer')
                     }
                 } else {
                     const clampedTime = clampTime(time, undefined, 'near')
@@ -377,7 +389,7 @@ const slider = reactive({
                         slider.setRangePoint('right', clampedTime)
                     ) {
                         slider.syncToInput()
-                        slider.hintTime = clampedTime
+                        slider.hintTimes.set(clampedTime)
                         emitStartPicking(slider.range)
                         emitPicking(slider.range)
                         return 'LEFT_PICKING'
@@ -404,7 +416,7 @@ const slider = reactive({
                     slider.setRangePoint('right', clampedTime)
                 ) {
                     slider.syncToInput()
-                    slider.hintTime = clampedTime
+                    slider.hintTimes.set(clampedTime)
                     emitPicking(slider.range)
                 }
             },
@@ -427,7 +439,7 @@ const slider = reactive({
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
-                    slider.hintTime = clampedTime
+                    slider.hintTimes.set(clampedTime)
                     emitPicking(slider.range)
                     if (event.type === 'pointerdown') {
                         return 'RIGHT_PICKING'
@@ -450,7 +462,7 @@ const slider = reactive({
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
-                    slider.hintTime = clampedTime
+                    slider.hintTimes.set(clampedTime)
                     emitPicking(slider.range)
                 }
             },
@@ -478,7 +490,7 @@ const slider = reactive({
                 const clampedTime = clampTime(time, slider.right!, 'near')
                 if (slider.setRangePoint('left', clampedTime)) {
                     slider.syncToInput()
-                    slider.hintTime = clampedTime
+                    slider.hintTimes.set(clampedTime)
                     emitPicking(slider.range)
                 }
             },
@@ -506,12 +518,99 @@ const slider = reactive({
                 const clampedTime = clampTime(time, slider.left!, 'near')
                 if (slider.setRangePoint('right', clampedTime)) {
                     slider.syncToInput()
-                    slider.hintTime = clampedTime
+                    slider.hintTimes.set(clampedTime)
                     emitPicking(slider.range)
                 }
             },
 
             // 用户松开鼠标（DONE）：
+            picked() {
+                // 判断是否是双击
+                if (slider.isDoubleClick) {
+                    slider.onDoubleClick()
+                }
+
+                emitEndPicking(slider.range)
+                emitChange(slider.range as Range) // WAIT
+                return 'WAIT'
+            },
+        },
+
+        MOVING: {
+            enter() {
+                slider.snapMode = SnapMode.None
+
+                assert(isFullRange(slider.range), `slider.range isn't a full range`)
+                assert(isValidTime(slider.initialTime), `slider.initialTime isn't a valid time`)
+
+                const left = clampTime(slider.range[0], undefined, 'floor')
+                const right = clampTime(slider.range[1], left, 'floor')
+                slider.movingInitialRange = [left, right]
+
+                globalCursorModifier.set('grabbing')
+            },
+
+            leave() {
+                slider.movingInitialRange = [undefined, undefined]
+            },
+
+            picking(time: Date | undefined) {
+                assert(isValidTime(time), `picking time isn't a valid time`)
+                const initialTime = slider.initialTime!
+
+                const initialStartPoint = getStartPoint(slider.movingInitialRange)
+                const initialEndPoint = getEndPoint(slider.movingInitialRange)
+
+                const initialStartTime = initialStartPoint.time!
+                const initialEndTime = initialEndPoint.time!
+
+                const date = startOfDay(time)
+                const initialDate = startOfDay(initialTime)
+
+                const timeOfDay = differenceInMilliseconds(time, date)
+                const initialTimeOfDay = differenceInMilliseconds(initialTime, initialDate)
+
+                const initialStartTimeOfDay = differenceInMilliseconds(
+                    initialStartTime,
+                    startOfDay(initialStartTime),
+                )
+                const initialEndTimeOfDay = differenceInMilliseconds(
+                    initialEndTime,
+                    startOfDay(initialEndTime),
+                )
+
+                const dateDiff = differenceInMilliseconds(date, initialDate)
+                const timeDiff = clamp(
+                    timeOfDay - initialTimeOfDay,
+                    -initialStartTimeOfDay,
+                    D_MS - 1 - initialEndTimeOfDay,
+                )
+                const offset = clamp(
+                    dateDiff + timeDiff,
+                    differenceInMilliseconds(min, initialStartTime),
+                    differenceInMilliseconds(max, initialEndTime),
+                )
+
+                const startTime = clampTime(
+                    addMilliseconds(initialStartTime, offset),
+                    undefined,
+                    'floor',
+                )
+                const endTime = clampTime(
+                    addMilliseconds(initialEndTime, offset),
+                    startTime,
+                    'floor',
+                )
+
+                const range =
+                    initialStartPoint.side === 'left' ? [startTime, endTime] : [endTime, startTime]
+
+                slider.setRange(range)
+                slider.hintTimes.set(...range)
+                slider.syncToInput()
+                emitPicking(slider.range)
+            },
+
             picked() {
                 // 判断是否是双击
                 if (slider.isDoubleClick) {
@@ -596,13 +695,16 @@ const slider = reactive({
 
         slider.updateItemSize((event.currentTarget as Element).children[0])
 
+        const mover = isMoverElement(event.target)
         const resizer = isResizerElement(event.target)
 
-        if (resizer) {
-            slider.hintTime = resizer === 'left' ? slider.left : slider.right
+        if (mover) {
+            slider.hintTimes.set(undefined)
+        } else if (resizer) {
+            slider.hintTimes.set(resizer === 'left' ? slider.left : slider.right)
         } else {
             const time = slider.getTimeByPointerEvent(event)
-            slider.hintTime = clampTime(time, undefined, 'near')
+            slider.hintTimes.set(clampTime(time, undefined, 'near'))
         }
     },
 
@@ -611,7 +713,7 @@ const slider = reactive({
             return
         }
 
-        slider.hintTime = undefined
+        slider.hintTimes.set(undefined)
     },
 
     onItemPointerDown(event: PointerEvent) {
@@ -672,6 +774,7 @@ const slider = reactive({
     onPointerDown(event: PointerEvent) {
         slider.initialClientX = event.clientX
         slider.initialClientY = event.clientY
+        slider.initialTime = slider.getTimeByPointerEvent(event)
         slider.isMoving = false
         slider.pushPointerEvent(event, 'down')
     },
@@ -679,6 +782,7 @@ const slider = reactive({
     onPointerUp(event: PointerEvent) {
         slider.initialClientX = 0
         slider.initialClientY = 0
+        slider.initialTime = undefined
         slider.isMoving = false
         slider.pushPointerEvent(event, 'up')
         slider.checkIsDoubleClick()
@@ -866,12 +970,9 @@ const slider = reactive({
 
 const sliderItems = $computed(() => {
     const dates = toRaw(slider.dates)
-    const range = slider.range
+    const { range, hintTimes } = slider
     const [startPoint, endPoint] = normalizeRange(range)
-    const hintTime = slider.hintTime
-    const hintTimeLine = slider.hintTimeLine
 
-    const dateOfHintTime = hintTime ? startOfDay(hintTime).valueOf() : undefined
     const dateOfStartPoint = startPoint ? startOfDay(startPoint).valueOf() : undefined
     const dateOfEndPoint = endPoint ? startOfDay(endPoint).valueOf() : dateOfStartPoint
 
@@ -879,13 +980,13 @@ const sliderItems = $computed(() => {
         const dateValue = date.valueOf()
 
         const passRange = dateValue >= dateOfStartPoint! && dateValue <= dateOfEndPoint!
-        const passHintTime = dateOfHintTime === dateValue
+        const hintTimesByDay = hintTimes.getTimesByDay(dateValue)
 
         return {
             date,
             range: passRange ? range : EMPTY_RANGE,
-            hintTime: passHintTime ? hintTime : undefined,
-            hintTimeLine: passHintTime ? hintTimeLine : false,
+            hintTimes: hintTimesByDay,
+            hintTimeLines: hintTimesByDay ? hintTimes.line : false,
         }
     })
 })
@@ -1021,5 +1122,13 @@ function isResizerElement(el: HTMLElement | EventTarget | null): PointFixedSide 
     if (el instanceof HTMLElement) {
         return el.dataset.resizer as PointFixedSide | undefined
     }
+}
+
+function isMoverElement(el: HTMLElement | EventTarget | null): boolean {
+    if (el instanceof HTMLElement) {
+        return el.dataset.mover === 'true'
+    }
+
+    return false
 }
 </script>
