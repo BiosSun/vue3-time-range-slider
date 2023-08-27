@@ -161,7 +161,7 @@ $b: time-range-slider;
 
         &__rail {
             @extend %rail;
-            background: #00aaff30;
+            background: #3B82F627;
 
             &__mover {
                 width: 100%;
@@ -190,7 +190,7 @@ $b: time-range-slider;
         }
 
         &__point {
-            background: #00aaff;
+            background: #3B82F6;
 
             &__resizer {
                 box-sizing: border-box;
